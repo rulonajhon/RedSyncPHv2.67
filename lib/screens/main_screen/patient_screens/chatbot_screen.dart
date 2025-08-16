@@ -11,7 +11,10 @@ class ChatbotScreen extends StatefulWidget {
 }
 
 class _ChatbotScreenState extends State<ChatbotScreen> {
-  final List<ChatMessage> _messages = [];
+  // Static list to persist messages across widget rebuilds during app session
+  static List<ChatMessage> _sessionMessages = [];
+  static bool _hasInitialized = false;
+
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _isLoading = false;
@@ -19,11 +22,14 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
   @override
   void initState() {
     super.initState();
-    _addWelcomeMessage();
+    if (!_hasInitialized) {
+      _addWelcomeMessage();
+      _hasInitialized = true;
+    }
   }
 
   void _addWelcomeMessage() {
-    _messages.add(
+    _sessionMessages.add(
       ChatMessage(
         text:
             "Hello! I'm HemoAssistant, your AI companion for hemophilia care and support. I'm here to help you with:\n\n"
@@ -46,17 +52,47 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     _textController.clear();
 
     setState(() {
-      _messages.add(ChatMessage(text: userMessage, isUser: true));
+      _sessionMessages.add(ChatMessage(text: userMessage, isUser: true));
       _isLoading = true;
     });
 
     _scrollToBottom();
 
     try {
+      // First, check if the message is hemophilia-related
+      final isHemophiliaRelated = await _isHemophiliaRelatedQuery(userMessage);
+
+      if (!isHemophiliaRelated) {
+        setState(() {
+          _sessionMessages.add(
+            ChatMessage(
+              text:
+                  "I'm HemoAssistant, specifically designed to help with hemophilia-related questions and concerns. "
+                  "I can assist you with:\n\n"
+                  "• Understanding hemophilia types and symptoms\n"
+                  "• Treatment and medication guidance\n"
+                  "• Lifestyle and activity recommendations\n"
+                  "• Emergency care information\n"
+                  "• Emotional support for hemophilia patients\n"
+                  "• Diet and nutrition for hemophilia\n"
+                  "• Exercise and physical therapy\n\n"
+                  "Please ask me something related to hemophilia care, and I'll be happy to help!",
+              isUser: false,
+            ),
+          );
+          _isLoading = false;
+        });
+        _scrollToBottom();
+        return;
+      }
+
       // Convert messages to format expected by OpenAI API
       // Exclude the just-added user message from history
-      final chatHistory = _messages
-          .where((msg) => _messages.indexOf(msg) != _messages.length - 1)
+      final chatHistory = _sessionMessages
+          .where(
+            (msg) =>
+                _sessionMessages.indexOf(msg) != _sessionMessages.length - 1,
+          )
           .map((msg) => msg.toMap())
           .toList();
 
@@ -67,15 +103,15 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
       if (response.isNotEmpty) {
         setState(() {
-          _messages.add(ChatMessage(text: response, isUser: false));
+          _sessionMessages.add(ChatMessage(text: response, isUser: false));
           _isLoading = false;
         });
       } else {
         setState(() {
-          _messages.add(
+          _sessionMessages.add(
             ChatMessage(
               text:
-                  "I'm sorry, I couldn't generate a response at the moment. Please try asking your question again.",
+                  "I'm sorry, I couldn't generate a response at the moment. Please try asking your hemophilia-related question again.",
               isUser: false,
             ),
           );
@@ -86,7 +122,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       _scrollToBottom();
     } catch (e) {
       setState(() {
-        _messages.add(
+        _sessionMessages.add(
           ChatMessage(
             text:
                 "I apologize, but I'm having trouble connecting right now. Please check your internet connection and try again. If the problem persists, you may need to verify your API configuration.",
@@ -97,6 +133,178 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       });
       _scrollToBottom();
     }
+  }
+
+  Future<bool> _isHemophiliaRelatedQuery(String query) async {
+    // Convert query to lowercase for better matching
+    final lowerQuery = query.toLowerCase().trim();
+
+    // Allow simple greetings and polite interactions
+    final greetings = [
+      'hello',
+      'hi',
+      'hey',
+      'good morning',
+      'good afternoon',
+      'good evening',
+      'how are you',
+      'how do you do',
+      'nice to meet you',
+      'greetings',
+      'thank you',
+      'thanks',
+      'please',
+      'excuse me',
+      'sorry',
+      'goodbye',
+      'bye',
+      'see you',
+      'have a good day',
+      'take care',
+    ];
+
+    // Check for simple greetings - allow these through
+    if (greetings.any((greeting) => lowerQuery.contains(greeting)) &&
+        lowerQuery.split(' ').length <= 5) {
+      return true;
+    }
+
+    // Define hemophilia-related keywords and phrases
+    final hemophiliaKeywords = [
+      // Direct hemophilia terms
+      'hemophilia', 'haemophilia', 'hemophiliac', 'haemophiliac',
+
+      // Types of hemophilia
+      'hemophilia a',
+      'hemophilia b',
+      'hemophilia c',
+      'factor viii',
+      'factor ix',
+      'factor xi',
+      'von willebrand', 'vwd', 'factor deficiency',
+
+      // Symptoms and conditions
+      'bleeding', 'bruising', 'clotting', 'coagulation', 'hemorrhage',
+      'internal bleeding', 'joint bleeding', 'muscle bleeding', 'epistaxis',
+      'hematoma', 'petechiae', 'ecchymosis', 'prolonged bleeding',
+      'excessive bleeding', 'abnormal bleeding',
+
+      // Treatments and medications
+      'factor concentrate', 'factor replacement', 'desmopressin', 'ddavp',
+      'antifibrinolytic', 'tranexamic acid', 'aminocaproic acid',
+      'plasma', 'cryoprecipitate', 'fresh frozen plasma', 'ffp',
+      'prophylaxis', 'on-demand treatment', 'infusion',
+
+      // Medical terms
+      'coagulation factor', 'blood clotting', 'platelet', 'hemostasis',
+      'bleeding disorder', 'inherited bleeding', 'genetic bleeding',
+      'bleeding time', 'pt', 'ptt', 'aptt', 'inr',
+
+      // Body parts commonly affected
+      'joint', 'knee', 'elbow', 'ankle', 'shoulder', 'hip',
+      'muscle', 'brain bleeding', 'intracranial',
+
+      // Emergency situations
+      'head injury', 'trauma', 'surgery', 'dental', 'tooth extraction',
+      'emergency', 'first aid', 'urgent care',
+
+      // Lifestyle topics
+      'exercise', 'sports', 'physical activity', 'diet', 'nutrition',
+      'travel', 'school', 'work', 'pregnancy', 'childbirth',
+
+      // Medical professionals
+      'hematologist', 'hemophilia center', 'comprehensive care',
+      'treatment center', 'htc',
+
+      // Support and resources
+      'support group', 'hemophilia foundation', 'patient education',
+      'family planning', 'genetic counseling', 'carrier testing',
+
+      // Related conditions
+      'bleeding disorder', 'platelet disorder', 'thrombocytopenia',
+      'immune thrombocytopenic purpura', 'itp',
+    ];
+
+    // Check if query contains any hemophilia-related keywords
+    bool containsKeywords = hemophiliaKeywords.any(
+      (keyword) => lowerQuery.contains(keyword),
+    );
+
+    if (containsKeywords) {
+      return true;
+    }
+
+    // Additional contextual checks for medical terms that might be hemophilia-related
+    final medicalContextWords = [
+      'bleeding',
+      'blood',
+      'clot',
+      'factor',
+      'treatment',
+      'medication',
+      'symptoms',
+      'diagnosis',
+      'genetic',
+      'inherited',
+      'disorder',
+      'condition',
+      'disease',
+      'therapy',
+      'infusion',
+      'injection',
+    ];
+
+    // If query contains medical context and mentions bleeding/blood disorders
+    if (medicalContextWords.any((word) => lowerQuery.contains(word))) {
+      // Additional check for bleeding/blood-related context
+      final bleedingContext = [
+        'bleeding',
+        'blood',
+        'bruise',
+        'clot',
+        'hemorrhage',
+      ];
+
+      if (bleedingContext.any((word) => lowerQuery.contains(word))) {
+        return true;
+      }
+    }
+
+    // Check for common question patterns about medical conditions
+    final questionPatterns = [
+      'what is',
+      'how to',
+      'can i',
+      'should i',
+      'is it safe',
+      'treatment for',
+      'symptoms of',
+      'causes of',
+      'prevention of',
+      'manage',
+      'cope with',
+      'deal with',
+      'help with',
+    ];
+
+    if (questionPatterns.any((pattern) => lowerQuery.contains(pattern))) {
+      // If it's a medical question, check if it could be hemophilia-related
+      final potentialHemophiliaTerms = [
+        'bleeding',
+        'bruising',
+        'joint pain',
+        'swelling',
+        'blood disorder',
+        'clotting',
+        'factor',
+      ];
+
+      if (potentialHemophiliaTerms.any((term) => lowerQuery.contains(term))) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   void _scrollToBottom() {
@@ -134,7 +342,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 size: 20,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -160,20 +368,22 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         ),
         actions: [
           Container(
-            margin: EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 16),
             child: IconButton(
               icon: Container(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.refresh, size: 20),
+                child: const Icon(Icons.refresh, size: 20),
               ),
               onPressed: () {
                 setState(() {
-                  _messages.clear();
+                  _sessionMessages.clear();
+                  _hasInitialized = false;
                   _addWelcomeMessage();
+                  _hasInitialized = true;
                 });
               },
               tooltip: 'Clear chat',
@@ -186,7 +396,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
           // Chat Header Info
           Container(
             width: double.infinity,
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
@@ -195,8 +405,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             child: Row(
               children: [
-                Icon(Icons.info_outline, color: Colors.blue, size: 20),
-                SizedBox(width: 8),
+                const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'This AI assistant provides health information only. Always consult healthcare professionals for medical decisions.',
@@ -213,18 +423,18 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
           // Messages Area
           Expanded(
-            child: _messages.isEmpty && !_isLoading
+            child: _sessionMessages.isEmpty && !_isLoading
                 ? _buildEmptyState()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-                    itemCount: _messages.length + (_isLoading ? 1 : 0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    itemCount: _sessionMessages.length + (_isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index == _messages.length && _isLoading) {
+                      if (index == _sessionMessages.length && _isLoading) {
                         return _buildLoadingMessage();
                       }
 
-                      final message = _messages[index];
+                      final message = _sessionMessages[index];
                       return _buildMessageBubble(message, index);
                     },
                   ),
@@ -251,8 +461,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             child: Icon(Icons.smart_toy, size: 40, color: Colors.red.shade700),
           ),
-          SizedBox(height: 24),
-          Text(
+          const SizedBox(height: 24),
+          const Text(
             'Welcome to HemoAssistant',
             style: TextStyle(
               fontSize: 20,
@@ -260,9 +470,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               'Start a conversation to get personalized hemophilia care assistance',
               style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
@@ -276,116 +486,173 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildMessageBubble(ChatMessage message, int index) {
     final isConsecutive =
-        index > 0 && _messages[index - 1].isUser == message.isUser;
+        index > 0 && _sessionMessages[index - 1].isUser == message.isUser;
 
     return Container(
       margin: EdgeInsets.only(
         bottom: isConsecutive ? 4 : 16,
         top: index == 0 ? 0 : (isConsecutive ? 0 : 8),
       ),
-      child: Row(
-        mainAxisAlignment: message.isUser
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: message.isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
         children: [
-          if (!message.isUser) ...[
-            if (!isConsecutive)
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  Icons.smart_toy,
-                  color: Colors.red.shade700,
-                  size: 16,
-                ),
-              )
-            else
-              SizedBox(width: 32),
-            SizedBox(width: 8),
-          ],
-
-          Flexible(
-            child: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width * 0.75,
-              ),
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: message.isUser ? Colors.red.shade700 : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(
-                    message.isUser ? 20 : (isConsecutive ? 8 : 20),
-                  ),
-                  topRight: Radius.circular(
-                    message.isUser ? (isConsecutive ? 8 : 20) : 20,
-                  ),
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-                border: message.isUser
-                    ? null
-                    : Border.all(color: Colors.grey.shade200, width: 1),
-              ),
-              child: message.isUser
-                  ? Text(
-                      message.text,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        height: 1.4,
-                      ),
-                    )
-                  : MarkdownBody(
-                      data: message.text,
-                      styleSheet: MarkdownStyleSheet(
-                        p: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 15,
-                          height: 1.5,
-                        ),
-                        strong: TextStyle(
-                          color: Colors.red.shade700,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        em: TextStyle(fontStyle: FontStyle.italic),
-                        listBullet: TextStyle(color: Colors.red.shade700),
-                        code: TextStyle(
-                          backgroundColor: Colors.grey.shade100,
-                          fontFamily: 'monospace',
-                        ),
-                      ),
+          Row(
+            mainAxisAlignment: message.isUser
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!message.isUser) ...[
+                if (!isConsecutive)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade100,
+                      borderRadius: BorderRadius.circular(16),
                     ),
-            ),
+                    child: Icon(
+                      Icons.smart_toy,
+                      color: Colors.red.shade700,
+                      size: 16,
+                    ),
+                  )
+                else
+                  const SizedBox(width: 32),
+                const SizedBox(width: 8),
+              ],
+
+              Flexible(
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.75,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: message.isUser ? Colors.red.shade700 : Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(
+                        message.isUser ? 20 : (isConsecutive ? 8 : 20),
+                      ),
+                      topRight: Radius.circular(
+                        message.isUser ? (isConsecutive ? 8 : 20) : 20,
+                      ),
+                      bottomLeft: const Radius.circular(20),
+                      bottomRight: const Radius.circular(20),
+                    ),
+                    border: message.isUser
+                        ? null
+                        : Border.all(color: Colors.grey.shade200, width: 1),
+                  ),
+                  child: message.isUser
+                      ? Text(
+                          message.text,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            height: 1.4,
+                          ),
+                        )
+                      : MarkdownBody(
+                          data: message.text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 15,
+                              height: 1.5,
+                            ),
+                            strong: TextStyle(
+                              color: Colors.red.shade700,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            em: const TextStyle(fontStyle: FontStyle.italic),
+                            listBullet: TextStyle(color: Colors.red.shade700),
+                            code: TextStyle(
+                              backgroundColor: Colors.grey.shade100,
+                              fontFamily: 'monospace',
+                            ),
+                          ),
+                        ),
+                ),
+              ),
+
+              if (message.isUser) ...[
+                const SizedBox(width: 8),
+                if (!isConsecutive)
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade700,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(Icons.person, color: Colors.white, size: 16),
+                  )
+                else
+                  const SizedBox(width: 32),
+              ],
+            ],
           ),
 
-          if (message.isUser) ...[
-            SizedBox(width: 8),
-            if (!isConsecutive)
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.red.shade700,
-                  borderRadius: BorderRadius.circular(16),
+          // Timestamp
+          if (!isConsecutive) ...[
+            const SizedBox(height: 4),
+            Padding(
+              padding: EdgeInsets.only(
+                left: message.isUser ? 0 : 40,
+                right: message.isUser ? 40 : 0,
+              ),
+              child: Text(
+                _formatTimestamp(message.timestamp),
+                style: TextStyle(
+                  color: Colors.grey.shade500,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
                 ),
-                child: Icon(Icons.person, color: Colors.white, size: 16),
-              )
-            else
-              SizedBox(width: 32),
+              ),
+            ),
           ],
         ],
       ),
     );
   }
 
+  String _formatTimestamp(DateTime timestamp) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final messageDate = DateTime(
+      timestamp.year,
+      timestamp.month,
+      timestamp.day,
+    );
+
+    if (messageDate == today) {
+      // Today - show time only
+      final hour = timestamp.hour;
+      final minute = timestamp.minute.toString().padLeft(2, '0');
+      final period = hour >= 12 ? 'PM' : 'AM';
+      final displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+      return '$displayHour:$minute $period';
+    } else if (messageDate == today.subtract(const Duration(days: 1))) {
+      // Yesterday
+      return 'Yesterday';
+    } else if (now.difference(timestamp).inDays < 7) {
+      // This week - show day name
+      final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      return weekdays[timestamp.weekday - 1];
+    } else {
+      // Older - show date
+      final month = timestamp.month.toString().padLeft(2, '0');
+      final day = timestamp.day.toString().padLeft(2, '0');
+      return '$month/$day/${timestamp.year}';
+    }
+  }
+
   Widget _buildLoadingMessage() {
     return Container(
-      margin: EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,9 +666,9 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
             ),
             child: Icon(Icons.smart_toy, color: Colors.red.shade700, size: 16),
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Container(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(20),
@@ -420,7 +687,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Text(
                   'HemoAssistant is thinking...',
                   style: TextStyle(
@@ -439,7 +706,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   Widget _buildInputArea() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey.shade200, width: 1)),
@@ -448,23 +715,23 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         child: Column(
           children: [
             // Quick suggestion chips
-            if (_messages.length <= 1) ...[
+            if (_sessionMessages.length <= 1) ...[
               SizedBox(
                 height: 40,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
                     _buildSuggestionChip('What is hemophilia?'),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     _buildSuggestionChip('Treatment options'),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     _buildSuggestionChip('Emergency care'),
-                    SizedBox(width: 8),
+                    const SizedBox(width: 8),
                     _buildSuggestionChip('Daily activities'),
                   ],
                 ),
               ),
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
             ],
 
             // Input field and send button
@@ -484,7 +751,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         hintText: 'Ask me about hemophilia care...',
                         hintStyle: TextStyle(color: Colors.grey.shade500),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(
+                        contentPadding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 12,
                         ),
@@ -494,7 +761,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 SizedBox(
                   width: 48,
                   height: 48,
@@ -506,7 +773,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                     elevation: 0,
                     onPressed: _isLoading ? null : _sendMessage,
                     child: _isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
@@ -516,7 +783,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                               ),
                             ),
                           )
-                        : Icon(Icons.send, color: Colors.white, size: 20),
+                        : const Icon(Icons.send, color: Colors.white, size: 20),
                   ),
                 ),
               ],
@@ -534,7 +801,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         _sendMessage();
       },
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: Colors.grey.shade100,
           borderRadius: BorderRadius.circular(20),

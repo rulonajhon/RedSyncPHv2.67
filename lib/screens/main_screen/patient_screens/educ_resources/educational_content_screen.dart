@@ -27,7 +27,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
       appBar: AppBar(
         title: Text(
           widget.topic['title'],
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         foregroundColor: widget.categoryColor,
@@ -42,7 +42,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
         ),
         actions: [
           Container(
-            margin: EdgeInsets.only(right: 8),
+            margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
               color: widget.categoryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -74,7 +74,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
             ),
           ),
           Container(
-            margin: EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
               color: widget.categoryColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(20),
@@ -102,8 +102,8 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                         color: Colors.grey[700],
                         size: 16,
                       ),
-                      SizedBox(width: 12),
-                      Text('Font Size'),
+                      const SizedBox(width: 12),
+                      const Text('Font Size'),
                     ],
                   ),
                 ),
@@ -116,8 +116,8 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                         color: Colors.grey[700],
                         size: 16,
                       ),
-                      SizedBox(width: 12),
-                      Text('Share'),
+                      const SizedBox(width: 12),
+                      const Text('Share'),
                     ],
                   ),
                 ),
@@ -133,8 +133,8 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
             // Topic Header
             Container(
               width: double.infinity,
-              margin: EdgeInsets.all(20),
-              padding: EdgeInsets.all(24),
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -143,7 +143,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                     color: Colors.grey.withOpacity(0.1),
                     spreadRadius: 1,
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -165,7 +165,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                           size: 24,
                         ),
                       ),
-                      SizedBox(width: 16),
+                      const SizedBox(width: 16),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -180,7 +180,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             if (widget.topic['description'] != null)
                               Text(
                                 widget.topic['description'],
@@ -197,7 +197,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -222,7 +222,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
 
             // Content Sections
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: widget.topic['content'].map<Widget>((section) {
@@ -234,13 +234,13 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
             // Additional Resources
             if (widget.topic['additionalResources'] != null) ...[
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     _buildSectionTitle('Additional Resources'),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     ...widget.topic['additionalResources'].map<Widget>((
                       resource,
                     ) {
@@ -251,7 +251,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
               ),
             ],
 
-            SizedBox(height: 40),
+            const SizedBox(height: 40),
           ],
         ),
       ),
@@ -260,7 +260,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
 
   Widget _buildInfoChip(IconData icon, String label) {
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: widget.categoryColor.withOpacity(0.1),
         borderRadius: BorderRadius.circular(20),
@@ -269,13 +269,16 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 12, color: widget.categoryColor),
-          SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: widget.categoryColor,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: widget.categoryColor,
+                fontWeight: FontWeight.w600,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -296,8 +299,8 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
 
   Widget _buildContentSection(Map<String, dynamic> section) {
     return Container(
-      margin: EdgeInsets.only(bottom: 24),
-      padding: EdgeInsets.all(20),
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -306,7 +309,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
             color: Colors.grey.withOpacity(0.08),
             spreadRadius: 1,
             blurRadius: 6,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -322,7 +325,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                 color: widget.categoryColor,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
           if (section['content'] != null) ...[
             Text(
@@ -333,17 +336,17 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                 color: Colors.grey.shade800,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
           if (section['bulletPoints'] != null) ...[
             ...section['bulletPoints'].map<Widget>((point) {
               return Padding(
-                padding: EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: 12),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      margin: EdgeInsets.only(top: 8, right: 12),
+                      margin: const EdgeInsets.only(top: 8, right: 12),
                       width: 6,
                       height: 6,
                       decoration: BoxDecoration(
@@ -365,12 +368,12 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                 ),
               );
             }).toList(),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
           ],
           if (section['warning'] != null) ...[
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Colors.orange.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
@@ -379,12 +382,12 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
+                  const Icon(
                     FontAwesomeIcons.triangleExclamation,
                     color: Colors.orange,
                     size: 20,
                   ),
-                  SizedBox(width: 12),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       section['warning'],
@@ -407,8 +410,8 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
 
   Widget _buildResourceItem(Map<String, dynamic> resource) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -440,7 +443,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                 size: 18,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,7 +456,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     resource['description'],
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
@@ -519,7 +522,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setStateDialog) => AlertDialog(
-          title: Text('Adjust Font Size'),
+          title: const Text('Adjust Font Size'),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -530,9 +533,9 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                 'Drag the slider to adjust text size for better readability',
                 style: TextStyle(color: Colors.grey.shade600),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(8),
@@ -542,10 +545,10 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                   style: TextStyle(fontSize: _fontSize),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     FontAwesomeIcons.textHeight,
                     size: 16,
                     color: Colors.grey,
@@ -602,7 +605,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text('Done', style: TextStyle(color: Colors.white)),
+              child: const Text('Done', style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -612,7 +615,7 @@ class _EducationalContentScreenState extends State<EducationalContentScreen> {
 
   void _shareContent() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('Sharing feature coming soon!'),
         duration: Duration(seconds: 2),
       ),

@@ -114,7 +114,7 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Provider Information',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -126,8 +126,8 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height: 20),
-            CircleAvatar(
+            const SizedBox(height: 20),
+            const CircleAvatar(
               radius: 60,
               backgroundColor: Colors.redAccent,
               child: Icon(
@@ -136,24 +136,24 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                 color: Colors.white,
               ),
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               provider?['name'] ?? 'Unknown Provider',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 24,
                 color: Colors.black87,
                 fontWeight: FontWeight.bold,
               ),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               provider?['email'] ?? 'No email provided',
-              style: TextStyle(fontSize: 16, color: Colors.black54),
+              style: const TextStyle(fontSize: 16, color: Colors.black54),
               textAlign: TextAlign.center,
             ),
-            SizedBox(height: 4),
-            Text(
+            const SizedBox(height: 4),
+            const Text(
               'Healthcare Professional',
               style: TextStyle(
                 fontSize: 14,
@@ -161,12 +161,12 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Expanded(
               child: ListView(
                 children: [
                   Container(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.red.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -176,13 +176,13 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.share, color: Colors.redAccent),
-                            SizedBox(width: 12),
+                            const Icon(Icons.share, color: Colors.redAccent),
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  const Text(
                                     'Share My Data',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
@@ -191,7 +191,7 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                                   ),
                                   Text(
                                     'with ${provider?['name'] ?? 'this provider'}',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.black54,
                                       fontSize: 14,
                                     ),
@@ -200,7 +200,7 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                               ),
                             ),
                             _isLoading
-                                ? SizedBox(
+                                ? const SizedBox(
                                     width: 24,
                                     height: 24,
                                     child: CircularProgressIndicator(strokeWidth: 2),
@@ -215,20 +215,20 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   ListTile(
-                    leading: Icon(Icons.info_outline, color: Colors.redAccent),
-                    title: Text(
+                    leading: const Icon(Icons.info_outline, color: Colors.redAccent),
+                    title: const Text(
                       'How does sharing my data work?',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
-                    trailing: Icon(FontAwesomeIcons.angleRight, color: Colors.redAccent),
+                    trailing: const Icon(FontAwesomeIcons.angleRight, color: Colors.redAccent),
                     onTap: () {
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
-                          title: Text('Data Sharing Information'),
-                          content: Column(
+                          title: const Text('Data Sharing Information'),
+                          content: const Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -243,7 +243,7 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context),
-                              child: Text('Got it'),
+                              child: const Text('Got it'),
                             ),
                           ],
                         ),
@@ -252,13 +252,13 @@ class _CareUserInformationScreenState extends State<CareUserInformationScreen> {
                   ),
                   Divider(color: Colors.grey.shade300),
                   ListTile(
-                    leading: Icon(Icons.email_outlined, color: Colors.redAccent),
-                    title: Text(
+                    leading: const Icon(Icons.email_outlined, color: Colors.redAccent),
+                    title: const Text(
                       'Contact Provider',
                       style: TextStyle(fontWeight: FontWeight.w500),
                     ),
                     subtitle: Text(provider?['email'] ?? 'No email available'),
-                    trailing: Icon(FontAwesomeIcons.angleRight, color: Colors.redAccent),
+                    trailing: const Icon(FontAwesomeIcons.angleRight, color: Colors.redAccent),
                     onTap: () {
                       // TODO: Implement email functionality
                     },

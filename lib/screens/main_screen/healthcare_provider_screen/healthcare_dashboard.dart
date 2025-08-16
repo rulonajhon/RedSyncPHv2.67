@@ -43,7 +43,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         toolbarHeight: 70,
-        title: Text(
+        title: const Text(
           'RedSync PH',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -125,26 +125,29 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
               // Welcome Section
               _buildWelcomeSection(),
 
+              // Verification Notice (only for unverified medical professionals)
+              _buildVerificationNotice(),
+
               // Quick Stats
               _buildQuickStats(),
 
               // Main Content Sections
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 32),
-                    _buildSectionTitle('Your Patients'),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 32),
+                    _buildSectionTitle('Your Connections'),
+                    const SizedBox(height: 16),
                     _buildPatientsOverview(),
 
-                    SizedBox(height: 32),
+                    const SizedBox(height: 32),
                     _buildSectionTitle('Pending Requests'),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     _buildPendingRequestsSection(),
 
-                    SizedBox(height: 40),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -159,7 +162,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.all(20),
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -174,18 +177,18 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   FontAwesomeIcons.userDoctor,
                   color: Colors.white,
                   size: 20,
                 ),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -199,7 +202,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
                     ),
                     Text(
                       'Dr. $_userName',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -210,7 +213,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Manage your patients and monitor their health data seamlessly',
             style: TextStyle(
@@ -221,6 +224,148 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildVerificationNotice() {
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('users')
+          .doc(currentUid)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox.shrink();
+        
+        final userData = snapshot.data!.data() as Map<String, dynamic>?;
+        if (userData == null) return const SizedBox.shrink();
+        
+        final isVerified = userData['isVerified'] ?? false;
+        final verificationExpiry = userData['verificationExpiry'] as String?;
+        
+        // Only show notice for unverified medical professionals
+        if (isVerified || verificationExpiry == null) {
+          return const SizedBox.shrink();
+        }
+        
+        final expiryDate = DateTime.parse(verificationExpiry);
+        final daysLeft = expiryDate.difference(DateTime.now()).inDays;
+        
+        // If expired, show different message
+        if (daysLeft <= 0) {
+          return Container(
+            margin: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.red.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.red.shade300),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.warning, color: Colors.red.shade600, size: 24),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Account Verification Expired',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Your medical professional account verification has expired. Your account will be deleted soon. Please complete verification immediately.',
+                  style: TextStyle(
+                    color: Colors.red.shade600,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/medical_info_settings');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text('Verify Now'),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        // Show countdown notice
+        return Container(
+          margin: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: Colors.orange.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.orange.shade300),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.schedule, color: Colors.orange.shade600, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Verification Required',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange.shade700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Please verify your medical credentials within $daysLeft ${daysLeft == 1 ? 'day' : 'days'}. Your account will be deleted if not verified in time.',
+                style: TextStyle(
+                  color: Colors.orange.shade600,
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/medical_info_settings');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.orange.shade600,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Upload Verification Documents'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -239,41 +384,54 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
               .where('status', isEqualTo: 'pending')
               .snapshots(),
           builder: (context, requestsSnapshot) {
-            final totalPatients = patientsSnapshot.data?.docs.length ?? 0;
-            final pendingRequests = requestsSnapshot.data?.docs.length ?? 0;
+            return StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('messages')
+                  .where('receiverId', isEqualTo: currentUid)
+                  .where('isRead', isEqualTo: false)
+                  .snapshots(),
+              builder: (context, messagesSnapshot) {
+                final totalPatients = patientsSnapshot.data?.docs.length ?? 0;
+                final pendingRequests = requestsSnapshot.data?.docs.length ?? 0;
+                final unreadMessages = messagesSnapshot.data?.docs.length ?? 0;
 
-            return Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildStatItem(
-                      icon: FontAwesomeIcons.users,
-                      label: 'Active Patients',
-                      value: totalPatients.toString(),
-                      color: Colors.blue.shade600,
-                    ),
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: FontAwesomeIcons.users,
+                          label: 'Active Patients',
+                          value: totalPatients.toString(),
+                          color: Colors.blue.shade600,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: FontAwesomeIcons.clockRotateLeft,
+                          label: 'Pending Requests',
+                          value: pendingRequests.toString(),
+                          color: Colors.orange.shade600,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildStatItem(
+                          icon: FontAwesomeIcons.message,
+                          label: 'Unread Messages',
+                          value: unreadMessages.toString(),
+                          color: Colors.green.shade600,
+                          onTap: () {
+                            Navigator.pushNamed(context, '/messages');
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatItem(
-                      icon: FontAwesomeIcons.clockRotateLeft,
-                      label: 'Pending Requests',
-                      value: pendingRequests.toString(),
-                      color: Colors.orange.shade600,
-                    ),
-                  ),
-                  SizedBox(width: 16),
-                  Expanded(
-                    child: _buildStatItem(
-                      icon: FontAwesomeIcons.message,
-                      label: 'Messages',
-                      value: '3',
-                      color: Colors.green.shade600,
-                    ),
-                  ),
-                ],
-              ),
+                );
+              },
             );
           },
         );
@@ -286,9 +444,10 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
     required String label,
     required String value,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+    Widget content = Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -297,16 +456,16 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
       child: Column(
         children: [
           Icon(icon, color: color, size: 22),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
               color: Colors.black87,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
@@ -320,12 +479,21 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
         ],
       ),
     );
+
+    if (onTap != null) {
+      return GestureDetector(
+        onTap: onTap,
+        child: content,
+      );
+    }
+
+    return content;
   }
 
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 20,
         fontWeight: FontWeight.bold,
         color: Colors.black87,
@@ -360,8 +528,8 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
           children: [
             ...patients.map((doc) => _buildPatientItem(doc)),
             if (patients.length >= 3)
-              _buildViewAllButton('View all patients', () {
-                Navigator.pushNamed(context, '/my_patients');
+              _buildViewAllButton('View all connections', () {
+                Navigator.pushNamed(context, '/connections');
               }),
           ],
         );
@@ -372,70 +540,17 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
   Widget _buildPatientItem(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final patientUid = data['patientUid'];
-
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: _firestoreService.getUser(patientUid),
-      builder: (context, userSnapshot) {
-        if (!userSnapshot.hasData) {
-          return Container(
-            margin: EdgeInsets.only(bottom: 12),
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade50,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade100),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade200,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    Icons.person,
-                    color: Colors.grey.shade500,
-                    size: 20,
-                  ),
-                ),
-                SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 100,
-                        height: 14,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(7),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Container(
-                        width: 120,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          );
+    return FutureBuilder<DocumentSnapshot>(
+      future: FirebaseFirestore.instance.collection('users').doc(patientUid).get(),
+      builder: (context, snapshot) {
+        String patientName = 'Patient';
+        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+          final patientData = snapshot.data!.data() as Map<String, dynamic>?;
+          patientName = patientData?['name'] ?? 'Patient';
         }
-
-        final userData = userSnapshot.data!;
-        final patientName = userData['name'] ?? 'Unknown Patient';
-
         return Container(
-          margin: EdgeInsets.only(bottom: 12),
-          padding: EdgeInsets.all(16),
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
             borderRadius: BorderRadius.circular(12),
@@ -450,43 +565,31 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
                   color: Colors.blue.shade100,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Center(
-                  child: Text(
-                    patientName[0].toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.blue.shade600,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
+                child: Icon(Icons.person, color: Colors.blue.shade600, size: 20),
               ),
-              SizedBox(width: 16),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       patientName,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                         color: Colors.black87,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'ID: ${patientUid.substring(0, 8)}...',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13,
-                      ),
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.green.shade100,
                   borderRadius: BorderRadius.circular(6),
@@ -535,7 +638,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
             ...requests.map((doc) => _buildRequestItem(doc)),
             if (requests.length >= 3)
               _buildViewAllButton('View all requests', () {
-                Navigator.pushNamed(context, '/my_patients');
+                // Navigate to requests tab
               }),
           ],
         );
@@ -546,8 +649,8 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
   Widget _buildRequestItem(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -568,12 +671,12 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
               size: 16,
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'New data sharing request',
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
@@ -581,7 +684,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
                   'Patient ID: ${data['patientUid'].substring(0, 8)}...',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
@@ -599,57 +702,6 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
     );
   }
 
-  Widget _buildActivityItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade100),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 16),
-          ),
-          SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 15,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildEmptyState({
     required IconData icon,
     required String title,
@@ -657,7 +709,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(32),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -666,7 +718,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
       child: Column(
         children: [
           Icon(icon, size: 40, color: Colors.grey.shade400),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             title,
             style: TextStyle(
@@ -675,7 +727,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
               color: Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             subtitle,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
@@ -694,7 +746,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade100),
       ),
-      child: Center(
+      child: const Center(
         child: SizedBox(
           width: 20,
           height: 20,
@@ -712,7 +764,7 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.redAccent.withOpacity(0.05),
           borderRadius: BorderRadius.circular(12),
@@ -723,14 +775,14 @@ class _HealthcareDashboardState extends State<HealthcareDashboard> {
           children: [
             Text(
               text,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.redAccent,
                 fontWeight: FontWeight.w600,
                 fontSize: 15,
               ),
             ),
-            SizedBox(width: 8),
-            Icon(
+            const SizedBox(width: 8),
+            const Icon(
               FontAwesomeIcons.chevronRight,
               color: Colors.redAccent,
               size: 12,

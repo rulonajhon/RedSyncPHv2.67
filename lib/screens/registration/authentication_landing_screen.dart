@@ -30,7 +30,7 @@ class _AuthenticationLandingScreenState
                   children: [
                     // Logo and App Name Section
                     Container(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade50,
                         borderRadius: BorderRadius.circular(24),
@@ -43,8 +43,8 @@ class _AuthenticationLandingScreenState
                             width: 100,
                             height: 100,
                           ),
-                          SizedBox(height: 12),
-                          Text(
+                          const SizedBox(height: 12),
+                          const Text(
                             'RedSyncPH',
                             style: TextStyle(
                               fontSize: 28,
@@ -54,7 +54,7 @@ class _AuthenticationLandingScreenState
                             ),
                             textAlign: TextAlign.center,
                           ),
-                          SizedBox(height: 6),
+                          const SizedBox(height: 6),
                           Text(
                             'Your hemophilia management companion',
                             style: TextStyle(
@@ -92,7 +92,7 @@ class _AuthenticationLandingScreenState
                               ),
                             ),
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: _buildActionButton(
                               title: 'Register',
@@ -107,7 +107,7 @@ class _AuthenticationLandingScreenState
                         ],
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Divider with text
                       Row(
@@ -119,7 +119,7 @@ class _AuthenticationLandingScreenState
                             ),
                           ),
                           Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Text(
                               'or continue with',
                               style: TextStyle(
@@ -138,7 +138,7 @@ class _AuthenticationLandingScreenState
                         ],
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // Google Sign In
                       SizedBox(
@@ -153,7 +153,7 @@ class _AuthenticationLandingScreenState
                         ),
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
                       // Guest Access
                       SizedBox(
@@ -163,78 +163,208 @@ class _AuthenticationLandingScreenState
                           icon: Icons.person_outline,
                           isPrimary: false,
                           onTap: () async {
-                            // Show info dialog first
-                            final confirmed = await showDialog<bool>(
+                            // Show info modal bottom sheet
+                            final confirmed = await showModalBottomSheet<bool>(
                               context: context,
-                              builder: (context) => AlertDialog(
-                                title: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.info_outline,
-                                      color: Colors.blue,
-                                    ),
-                                    SizedBox(width: 8),
-                                    Text('Guest Mode'),
-                                  ],
+                              backgroundColor: Colors.transparent,
+                              isScrollControlled: true,
+                              builder: (context) => Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(24),
+                                    topRight: Radius.circular(24),
+                                  ),
                                 ),
-                                content: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('As a guest, you can:'),
-                                    SizedBox(height: 8),
-                                    Text('• Access educational resources'),
-                                    Text('• Use the dosage calculator'),
-                                    Text('• Find nearby clinics'),
-                                    Text('• Try the pre-screening tool'),
-                                    SizedBox(height: 12),
-                                    Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.orange.shade50,
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: Colors.orange.shade200,
+                                child: Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      // Handle bar
+                                      Container(
+                                        width: 40,
+                                        height: 4,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade300,
+                                          borderRadius:
+                                              BorderRadius.circular(2),
                                         ),
                                       ),
-                                      child: Row(
+                                      const SizedBox(height: 24),
+                                      // Header
+                                      Row(
                                         children: [
-                                          Icon(
-                                            Icons.warning_amber,
-                                            color: Colors.orange.shade700,
-                                            size: 16,
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  Colors.blue.withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            child: const Icon(
+                                              Icons.info_outline,
+                                              color: Colors.blue,
+                                              size: 24,
+                                            ),
                                           ),
-                                          SizedBox(width: 8),
-                                          Expanded(
+                                          const SizedBox(width: 16),
+                                          const Expanded(
                                             child: Text(
-                                              'Note: Data won\'t be saved between sessions',
+                                              'Guest Mode',
                                               style: TextStyle(
-                                                color: Colors.orange.shade700,
-                                                fontSize: 12,
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black87,
                                               ),
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(height: 24),
+                                      // Features section
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(20),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                              color: Colors.grey.shade200),
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.all(8),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green
+                                                        .withOpacity(0.1),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8),
+                                                  ),
+                                                  child: const Icon(
+                                                    Icons.check_circle,
+                                                    color: Colors.green,
+                                                    size: 16,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                const Text(
+                                                  'As a guest, you can:',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.black87,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 16),
+                                            _buildGuestFeature(
+                                                'Access educational resources'),
+                                            _buildGuestFeature(
+                                                'Use the dosage calculator'),
+                                            _buildGuestFeature(
+                                                'Find nearby clinics'),
+                                            _buildGuestFeature(
+                                                'Try the pre-screening tool'),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // Warning section
+                                      Container(
+                                        width: double.infinity,
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange.shade50,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          border: Border.all(
+                                              color: Colors.orange.shade200),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.warning_amber,
+                                              color: Colors.orange.shade700,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                'Data won\'t be saved between sessions',
+                                                style: TextStyle(
+                                                  color: Colors.orange.shade700,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 32),
+                                      // Action buttons
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: OutlinedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, false),
+                                              style: OutlinedButton.styleFrom(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 14),
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: const Text('Cancel'),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          Expanded(
+                                            flex: 2,
+                                            child: ElevatedButton(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, true),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Colors.redAccent,
+                                                foregroundColor: Colors.white,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 14),
+                                                elevation: 0,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                              ),
+                                              child: const Text(
+                                                'Continue as Guest',
+                                                style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.w600),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                    ],
+                                  ),
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text('Cancel'),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.redAccent,
-                                      foregroundColor: Colors.white,
-                                    ),
-                                    child: Text('Continue'),
-                                  ),
-                                ],
                               ),
                             );
 
@@ -245,7 +375,7 @@ class _AuthenticationLandingScreenState
                               showDialog(
                                 context: context,
                                 barrierDismissible: false,
-                                builder: (context) => AlertDialog(
+                                builder: (context) => const AlertDialog(
                                   content: Row(
                                     children: [
                                       CircularProgressIndicator(),
@@ -257,8 +387,8 @@ class _AuthenticationLandingScreenState
                               );
 
                               // Sign in anonymously
-                              final user = await AuthService()
-                                  .signInAnonymously();
+                              final user =
+                                  await AuthService().signInAnonymously();
 
                               if (user != null && mounted) {
                                 // Create basic guest profile in Firestore
@@ -270,7 +400,7 @@ class _AuthenticationLandingScreenState
                                 );
 
                                 // Store guest session data
-                                final storage = FlutterSecureStorage();
+                                const storage = FlutterSecureStorage();
                                 await storage.write(
                                   key: 'isLoggedIn',
                                   value: 'true',
@@ -309,7 +439,7 @@ class _AuthenticationLandingScreenState
                                       'Failed to continue as guest: ${e.toString()}',
                                     ),
                                     backgroundColor: Colors.red,
-                                    duration: Duration(seconds: 3),
+                                    duration: const Duration(seconds: 3),
                                   ),
                                 );
                               }
@@ -318,7 +448,7 @@ class _AuthenticationLandingScreenState
                         ),
                       ),
 
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
 
                       // Pre-screening Button
                       SizedBox(
@@ -339,7 +469,7 @@ class _AuthenticationLandingScreenState
 
               // Footer Section
               Container(
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 child: Column(
                   children: [
                     Text(
@@ -357,10 +487,10 @@ class _AuthenticationLandingScreenState
                             // TODO: Navigate to Terms of Service
                           },
                           style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             minimumSize: Size.zero,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Terms of Service',
                             style: TextStyle(
                               color: Colors.redAccent,
@@ -381,10 +511,10 @@ class _AuthenticationLandingScreenState
                             // TODO: Navigate to Privacy Policy
                           },
                           style: TextButton.styleFrom(
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                             minimumSize: Size.zero,
                           ),
-                          child: Text(
+                          child: const Text(
                             'Privacy Policy',
                             style: TextStyle(
                               color: Colors.redAccent,
@@ -439,7 +569,7 @@ class _AuthenticationLandingScreenState
               width: 1,
             ),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -470,8 +600,36 @@ class _AuthenticationLandingScreenState
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGuestFeature(String feature) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 4,
+            height: 4,
+            decoration: const BoxDecoration(
+              color: Colors.green,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              feature,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

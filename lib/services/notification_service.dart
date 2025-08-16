@@ -40,6 +40,9 @@ class NotificationService {
           requestSoundPermission: true,
           requestBadgePermission: true,
           requestAlertPermission: true,
+          defaultPresentAlert: true,
+          defaultPresentSound: true,
+          defaultPresentBadge: true,
         );
 
     const InitializationSettings initializationSettings =
@@ -102,6 +105,25 @@ class NotificationService {
   }
 
   Future<bool> requestPermissions() async {
+    // For iOS, permissions are requested during initialization
+    // The DarwinInitializationSettings already handles permission requests
+    try {
+      // Request permissions using the plugin's own method
+      if (await _flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin>()
+          ?.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          ) != null) {
+        print('iOS notification permissions requested');
+      }
+    } catch (e) {
+      print('Note: iOS permissions handled during initialization: $e');
+    }
+
+    // Handle Android permissions
     final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
         _flutterLocalNotificationsPlugin
             .resolvePlatformSpecificImplementation<
@@ -129,8 +151,8 @@ class NotificationService {
       }
     }
 
-    // For iOS, we'll handle permissions differently
-    return true; // Simplified for now
+    // For other platforms, assume permissions are granted
+    return true;
   }
 
   Future<void> scheduleMedicationReminder({

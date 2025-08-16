@@ -8,37 +8,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hemophilia_manager/screens/main_screen/patient_screens/main_screen_hud.dart';
 import 'package:hemophilia_manager/screens/main_screen/healthcare_provider_screen/healthcare_main_screen.dart';
+import 'package:hemophilia_manager/screens/admin/admin_dashboard.dart';
 import 'package:hemophilia_manager/services/openai_service.dart';
 import 'package:hemophilia_manager/services/notification_service.dart';
+import 'package:hemophilia_manager/services/firestore.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
-
-// Function to save theme preference
-Future<void> saveThemeMode(ThemeMode themeMode) async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString('theme_mode', themeMode.name);
-}
-
-// Function to load theme preference
-Future<ThemeMode> loadThemeMode() async {
-  final prefs = await SharedPreferences.getInstance();
-  final themeName = prefs.getString('theme_mode');
-  if (themeName == 'dark') {
-    return ThemeMode.dark;
-  } else if (themeName == 'light') {
-    return ThemeMode.light;
-  } else {
-    return ThemeMode.system;
-  }
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Load saved theme preference
-  final savedTheme = await loadThemeMode();
-  themeNotifier.value = savedTheme;
 
   // Initialize OpenAI service
   try {
@@ -57,7 +36,16 @@ void main() async {
     // Don't rethrow to prevent app startup crash
   }
 
-  runApp(MyApp());
+  // Clean up expired unverified medical accounts
+  try {
+    final FirestoreService firestoreService = FirestoreService();
+    await firestoreService.cleanupExpiredUnverifiedAccounts();
+    print('Expired account cleanup completed');
+  } catch (e) {
+    print('Warning: Failed to cleanup expired accounts: $e');
+  }
+
+  runApp(const MyApp());
 }
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -161,91 +149,9 @@ class _MyAppState extends State<MyApp> {
             cardColor: Colors.grey[50],
             dividerColor: Colors.grey[300],
           ),
-          darkTheme: ThemeData(
-            fontFamily: 'Poppins',
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.redAccent,
-              brightness: Brightness.dark,
-            ),
-            scaffoldBackgroundColor: Colors.black,
-            cardColor: Colors.grey[900],
-            canvasColor: Colors.grey[900],
-            textTheme: const TextTheme(
-              bodyLarge: TextStyle(color: Colors.white, fontSize: 16),
-              bodyMedium: TextStyle(color: Colors.white, fontSize: 14),
-              bodySmall: TextStyle(color: Colors.white70, fontSize: 12),
-              headlineLarge: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              headlineMedium: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              titleLarge: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-              titleMedium: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              titleSmall: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-              labelLarge: TextStyle(color: Colors.white),
-              labelMedium: TextStyle(color: Colors.white),
-              labelSmall: TextStyle(color: Colors.white70),
-            ),
-            iconTheme: const IconThemeData(color: Colors.white, size: 24),
-            primaryIconTheme: const IconThemeData(color: Colors.redAccent),
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              elevation: 0,
-              centerTitle: true,
-              iconTheme: IconThemeData(color: Colors.white),
-              actionsIconTheme: IconThemeData(color: Colors.white),
-              titleTextStyle: TextStyle(
-                color: Colors.white,
-                fontFamily: 'Poppins',
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
-            ),
-            bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: Colors.grey[900],
-              selectedItemColor: Colors.redAccent,
-              unselectedItemColor: Colors.grey[400],
-              type: BottomNavigationBarType.fixed,
-            ),
-            elevatedButtonTheme: ElevatedButtonThemeData(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                elevation: 2,
-              ),
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              filled: true,
-              fillColor: Colors.grey[800],
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-                borderSide: BorderSide(color: Colors.grey[600]!),
-              ),
-              labelStyle: const TextStyle(color: Colors.white70),
-              hintStyle: const TextStyle(color: Colors.grey),
-            ),
-            dividerTheme: DividerThemeData(
-              color: Colors.grey[700],
-              thickness: 1,
-            ),
-            dialogTheme: DialogThemeData(backgroundColor: Colors.grey[850]),
-          ),
           themeMode: currentMode,
           debugShowCheckedModeBanner: false,
-          home: AppInitializer(),
+          home: const AppInitializer(),
           routes: AppRoutes.routes,
         );
       },
@@ -280,7 +186,7 @@ class _AppInitializerState extends State<AppInitializer> {
       if (!onboardingComplete) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OnboardingScreen()),
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
         );
         return;
       }
@@ -297,13 +203,16 @@ class _AppInitializerState extends State<AppInitializer> {
         switch (userRole) {
           case 'patient':
           case 'caregiver':
-            targetScreen = MainScreenDisplay();
+            targetScreen = const MainScreenDisplay();
             break;
           case 'medical':
-            targetScreen = HealthcareMainScreen();
+            targetScreen = const HealthcareMainScreen();
+            break;
+          case 'admin':
+            targetScreen = const AdminDashboard();
             break;
           default:
-            targetScreen = AuthenticationLandingScreen();
+            targetScreen = const AuthenticationLandingScreen();
         }
 
         Navigator.pushReplacement(
@@ -315,7 +224,7 @@ class _AppInitializerState extends State<AppInitializer> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => AuthenticationLandingScreen(),
+            builder: (context) => const AuthenticationLandingScreen(),
           ),
         );
       }
@@ -324,7 +233,9 @@ class _AppInitializerState extends State<AppInitializer> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => AuthenticationLandingScreen()),
+          MaterialPageRoute(
+            builder: (context) => const AuthenticationLandingScreen(),
+          ),
         );
       }
     }
@@ -332,7 +243,7 @@ class _AppInitializerState extends State<AppInitializer> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

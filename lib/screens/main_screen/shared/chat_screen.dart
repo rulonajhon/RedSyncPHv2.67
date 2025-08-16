@@ -124,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _scrollToBottom();
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
               Icon(Icons.check, color: Colors.white),
@@ -153,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
           _scrollController.position.maxScrollExtent,
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
       }
@@ -178,7 +178,7 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         leading: IconButton(
           onPressed: () => Navigator.pop(context),
-          icon: Icon(
+          icon: const Icon(
             FontAwesomeIcons.arrowLeft,
             color: Colors.redAccent,
             size: 18,
@@ -201,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 size: 20,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,7 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     widget.participant['role'] == 'medical'
                         ? 'Healthcare Provider'
@@ -231,6 +231,28 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ],
         ),
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: IconButton(
+              icon: const Icon(FontAwesomeIcons.phone, size: 16),
+              color: Colors.grey.shade600,
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('Voice call feature coming soon'),
+                    backgroundColor: Colors.grey.shade600,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -241,7 +263,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
@@ -249,7 +271,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             strokeWidth: 2.5,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'Loading messages...',
                           style: TextStyle(
@@ -278,7 +300,7 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Colors.grey.shade400,
                           ),
                         ),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         Text(
                           'No messages yet',
                           style: TextStyle(
@@ -287,9 +309,9 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Colors.grey.shade700,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 48),
+                          padding: const EdgeInsets.symmetric(horizontal: 48),
                           child: Text(
                             'Start a conversation with ${widget.participant['name']}',
                             style: TextStyle(
@@ -305,7 +327,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   )
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
@@ -328,7 +350,7 @@ class _ChatScreenState extends State<ChatScreen> {
           // Message Input
           SingleChildScrollView(
             child: Container(
-              padding: EdgeInsets.fromLTRB(20, 16, 20, 20),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -357,7 +379,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               fontSize: 16,
                             ),
                             border: InputBorder.none,
-                            contentPadding: EdgeInsets.symmetric(
+                            contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
                               vertical: 12,
                             ),
@@ -365,11 +387,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           maxLines: null,
                           textCapitalization: TextCapitalization.sentences,
                           onSubmitted: (_) => _sendMessage(),
-                          style: TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 16),
                         ),
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Container(
                       width: 48,
                       height: 48,
@@ -382,7 +404,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: IconButton(
                         onPressed: _isSending ? null : _sendMessage,
                         icon: _isSending
-                            ? SizedBox(
+                            ? const SizedBox(
                                 width: 20,
                                 height: 20,
                                 child: CircularProgressIndicator(
@@ -390,7 +412,7 @@ class _ChatScreenState extends State<ChatScreen> {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : Icon(
+                            : const Icon(
                                 FontAwesomeIcons.paperPlane,
                                 color: Colors.white,
                                 size: 16,
@@ -435,8 +457,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: Colors.grey.shade600,
                     ),
                   )
-                : SizedBox(width: 32),
-            SizedBox(width: 8),
+                : const SizedBox(width: 32),
+            const SizedBox(width: 8),
           ],
           Flexible(
             child: Column(
@@ -444,42 +466,45 @@ class _ChatScreenState extends State<ChatScreen> {
                   ? CrossAxisAlignment.end
                   : CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: isCurrentUser ? Colors.redAccent : Colors.white,
-                    borderRadius: BorderRadius.circular(20).copyWith(
-                      bottomLeft: isCurrentUser
-                          ? Radius.circular(20)
-                          : Radius.circular(4),
-                      bottomRight: isCurrentUser
-                          ? Radius.circular(4)
-                          : Radius.circular(20),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
+                GestureDetector(
+                  onLongPress: () => _showDeleteMessageDialog(message, isCurrentUser),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isCurrentUser ? Colors.redAccent : Colors.white,
+                      borderRadius: BorderRadius.circular(20).copyWith(
+                        bottomLeft: isCurrentUser
+                            ? const Radius.circular(20)
+                            : const Radius.circular(4),
+                        bottomRight: isCurrentUser
+                            ? const Radius.circular(4)
+                            : const Radius.circular(20),
                       ),
-                    ],
-                  ),
-                  child: Text(
-                    message['message'] ?? '',
-                    style: TextStyle(
-                      color: isCurrentUser
-                          ? Colors.white
-                          : Colors.grey.shade800,
-                      fontSize: 16,
-                      height: 1.3,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 1,
+                          blurRadius: 2,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      message['message'] ?? '',
+                      style: TextStyle(
+                        color: isCurrentUser
+                            ? Colors.white
+                            : Colors.grey.shade800,
+                        fontSize: 16,
+                        height: 1.3,
+                      ),
                     ),
                   ),
                 ),
                 if (showAvatar) ...[
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
                       _formatMessageTime(message['timestamp']),
                       style: TextStyle(
@@ -494,7 +519,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           if (isCurrentUser) ...[
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             showAvatar
                 ? Container(
                     width: 32,
@@ -503,13 +528,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       color: Colors.redAccent.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Icon(
+                    child: const Icon(
                       FontAwesomeIcons.user,
                       size: 16,
                       color: Colors.redAccent,
                     ),
                   )
-                : SizedBox(width: 32),
+                : const SizedBox(width: 32),
           ],
         ],
       ),
@@ -539,6 +564,88 @@ class _ChatScreenState extends State<ChatScreen> {
       return '${difference.inMinutes}m ago';
     } else {
       return 'Just now';
+    }
+  }
+
+  void _showDeleteMessageDialog(Map<String, dynamic> message, bool isCurrentUser) {
+    // Only show delete option for the message sender
+    if (!isCurrentUser) {
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Message'),
+          content: const Text('Are you sure you want to delete this message? This action cannot be undone.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await _deleteMessage(message);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.red,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteMessage(Map<String, dynamic> message) async {
+    try {
+      // Get message ID from Firestore document
+      final messageId = message['id']; // This should be set when loading messages
+      
+      print('Attempting to delete message with ID: $messageId');
+      print('Current user ID: $_currentUserId');
+      
+      if (messageId == null) {
+        print('Error: Message ID is null');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cannot delete message: Invalid message ID'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      final success = await _messageService.deleteMessage(messageId, _currentUserId!);
+      
+      print('Delete message result: $success');
+      
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Message deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete message'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error deleting message in chat screen: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Error deleting message'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 }

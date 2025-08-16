@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../../../services/firestore.dart';
 
 part '../../../models/offline/log_infusion.g.dart';
 
@@ -44,6 +46,10 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
   bool _isSaving = false;
   String _selectedMedicationType = '';
 
+  // Firebase services
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirestoreService _firestoreService = FirestoreService();
+
   final List<String> _medicationTypes = [
     'Factor VIII',
     'Factor IX',
@@ -59,6 +65,7 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     _selectedDate = DateTime.now();
     _selectedTime = TimeOfDay.now();
     _initHive();
+    _syncLocalDataToFirestore(); // Sync any offline data
   }
 
   Future<void> _initHive() async {
@@ -70,31 +77,131 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     await Hive.openBox<InfusionLog>('infusion_logs');
   }
 
+  // Sync local Hive data to Firestore (for offline entries)
+  Future<void> _syncLocalDataToFirestore() async {
+    try {
+      final user = _auth.currentUser;
+      if (user == null) return;
+
+      final box = Hive.box<InfusionLog>('infusion_logs');
+      final localLogs = box.values.toList();
+
+      // Get existing Firestore logs to avoid duplicates
+      final firestoreLogs = await _firestoreService.getInfusionLogs(user.uid);
+
+      for (final localLog in localLogs) {
+        // Check if this log already exists in Firestore
+        final exists = firestoreLogs.any(
+          (firestoreLog) =>
+              firestoreLog['medication'] == localLog.medication &&
+              firestoreLog['date'] == localLog.date &&
+              firestoreLog['time'] == localLog.time &&
+              firestoreLog['doseIU'] == localLog.doseIU,
+        );
+
+        if (!exists) {
+          // Upload to Firestore
+          await _firestoreService.saveInfusionLog(
+            uid: user.uid,
+            medication: localLog.medication,
+            doseIU: localLog.doseIU,
+            date: localLog.date,
+            time: localLog.time,
+            notes: localLog.notes,
+          );
+          print('Synced local log to Firestore: ${localLog.medication}');
+        }
+      }
+    } catch (e) {
+      print('Error syncing local data to Firestore: $e');
+      // Don't show error to user as this is background sync
+    }
+  }
+
   Future<void> _saveInfusion() async {
     if (!_formKey.currentState!.validate() ||
         _selectedDate == null ||
         _selectedTime == null) {
       return;
     }
+
     setState(() => _isSaving = true);
 
-    final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
-    final timeStr = _selectedTime!.format(context);
+    try {
+      final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
+      final timeStr = _selectedTime!.format(context);
 
-    final log = InfusionLog(
-      medication: _medicationController.text.trim(),
-      doseIU: int.tryParse(_doseController.text.trim()) ?? 0,
-      date: dateStr,
-      time: timeStr,
-      notes: _notesController.text.trim(),
-    );
+      // Create infusion log data
+      final log = InfusionLog(
+        medication: _medicationController.text.trim(),
+        doseIU: int.tryParse(_doseController.text.trim()) ?? 0,
+        date: dateStr,
+        time: timeStr,
+        notes: _notesController.text.trim(),
+      );
 
-    final box = Hive.box<InfusionLog>('infusion_logs');
-    await box.add(log);
+      // Save to local Hive storage
+      final box = Hive.box<InfusionLog>('infusion_logs');
+      await box.add(log);
 
-    setState(() => _isSaving = false);
-    if (!mounted) return;
-    Navigator.pop(context);
+      // Save to Firestore (cloud database)
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _firestoreService.saveInfusionLog(
+          uid: user.uid,
+          medication: _medicationController.text.trim(),
+          doseIU: int.tryParse(_doseController.text.trim()) ?? 0,
+          date: dateStr,
+          time: timeStr,
+          notes: _notesController.text.trim(),
+        );
+        print('Infusion log saved to Firestore successfully');
+      } else {
+        print('User not authenticated - saved to local storage only');
+      }
+
+      if (!mounted) return;
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Infusion logged successfully!'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      print('Error saving infusion log: $e');
+
+      if (!mounted) return;
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Error saving infusion log. Please try again.'),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
+      }
+    }
   }
 
   Future<void> _pickDate() async {
@@ -106,8 +213,8 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.deepPurple,
+            colorScheme: const ColorScheme.light(
+              primary: Colors.redAccent,
               onPrimary: Colors.white,
             ),
           ),
@@ -125,8 +232,8 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Colors.deepPurple,
+            colorScheme: const ColorScheme.light(
+              primary: Colors.redAccent,
               onPrimary: Colors.white,
             ),
           ),
@@ -140,255 +247,179 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Log Infusion',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+          ),
         ),
         foregroundColor: Colors.white,
-        backgroundColor: Colors.deepPurple,
+        backgroundColor: Colors.purple,
         elevation: 0,
+        centerTitle: true,
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header Section
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.deepPurple,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.medical_services,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Record your infusion',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Keep track of your medication intake',
-                              style: TextStyle(
-                                color: Colors.white.withOpacity(0.9),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                const Text(
+                  'Record Infusion',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
                   ),
-                ],
-              ),
-            ),
-        
-            // Form Content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.all(20),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      // Medication Type Section
-                      _buildSectionContainer(
-                        title: 'Medication Information',
-                        icon: Icons.medication,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Keep track of your medication intake',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Medication Type
+                _buildInputLabel('Medication Type'),
+                const SizedBox(height: 8),
+                _buildMedicationSelector(),
+
+                const SizedBox(height: 24),
+
+                // Specific Medication Name
+                _buildInputLabel('Medication Name'),
+                const SizedBox(height: 8),
+                _buildCleanInput(
+                  controller: _medicationController,
+                  hintText: 'Enter specific medication name',
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Enter medication name' : null,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Dose
+                _buildInputLabel('Dose (IU)'),
+                const SizedBox(height: 8),
+                _buildCleanInput(
+                  controller: _doseController,
+                  hintText: 'Enter dose amount',
+                  keyboardType: TextInputType.number,
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Enter dose amount' : null,
+                ),
+
+                const SizedBox(height: 24),
+
+                // Date & Time Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildMedicationSelector(),
-                          SizedBox(height: 16),
-                          _buildCustomInput(
-                            controller: _medicationController,
-                            label: 'Specific Medication Name',
-                            icon: Icons.medical_services_outlined,
-                            validator: (v) => v == null || v.isEmpty ? 'Enter medication name' : null,
-                          ),
-                          SizedBox(height: 16),
-                          _buildCustomInput(
-                            controller: _doseController,
-                            label: 'Dose (IU)',
-                            icon: Icons.colorize,
-                            keyboardType: TextInputType.number,
-                            validator: (v) => v == null || v.isEmpty ? 'Enter dose amount' : null,
-                          ),
-                        ],
-                      ),
-        
-                      SizedBox(height: 20),
-        
-                      // Date & Time Section
-                      _buildSectionContainer(
-                        title: 'When was this taken?',
-                        icon: Icons.schedule,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildDateTimeSelector(
-                                  label: 'Date',
-                                  value: _selectedDate != null 
-                                      ? DateFormat('MMM dd, yyyy').format(_selectedDate!)
-                                      : 'Select date',
-                                  icon: Icons.calendar_today,
-                                  onTap: _pickDate,
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: _buildDateTimeSelector(
-                                  label: 'Time',
-                                  value: _selectedTime != null 
-                                      ? _selectedTime!.format(context)
-                                      : 'Select time',
-                                  icon: Icons.access_time,
-                                  onTap: _pickTime,
-                                ),
-                              ),
-                            ],
+                          _buildInputLabel('Date'),
+                          const SizedBox(height: 8),
+                          _buildDateTimeSelector(
+                            value: _selectedDate != null
+                                ? DateFormat('MMM dd, yyyy')
+                                    .format(_selectedDate!)
+                                : 'Select date',
+                            icon: Icons.calendar_today_outlined,
+                            onTap: _pickDate,
                           ),
                         ],
                       ),
-        
-                      SizedBox(height: 20),
-        
-                      // Notes Section
-                      _buildSectionContainer(
-                        title: 'Additional Notes (Optional)',
-                        icon: Icons.note_outlined,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            decoration: BoxDecoration(
+                          _buildInputLabel('Time'),
+                          const SizedBox(height: 8),
+                          _buildDateTimeSelector(
+                            value: _selectedTime != null
+                                ? _selectedTime!.format(context)
+                                : 'Select time',
+                            icon: Icons.access_time_outlined,
+                            onTap: _pickTime,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
+                // Notes
+                _buildInputLabel('Notes (Optional)'),
+                const SizedBox(height: 8),
+                _buildNotesInput(),
+
+                const SizedBox(height: 25),
+
+                // Save Button
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: ElevatedButton(
+                    onPressed: _isSaving ? null : _saveInfusion,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      disabledBackgroundColor: Colors.grey.shade300,
+                    ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
                               color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade300),
+                              strokeWidth: 2,
                             ),
-                            child: TextFormField(
-                              controller: _notesController,
-                              maxLines: 4,
-                              decoration: InputDecoration(
-                                hintText: 'Any additional notes about this infusion...',
-                                hintStyle: TextStyle(color: Colors.grey.shade500),
-                                border: InputBorder.none,
-                                contentPadding: EdgeInsets.all(16),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-        
-                      SizedBox(height: 32),
-        
-                      // Save Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton.icon(
-                          onPressed: _isSaving ? null : _saveInfusion,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.deepPurple,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          icon: _isSaving 
-                              ? SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : Icon(Icons.save, size: 20),
-                          label: Text(
-                            _isSaving ? 'Saving...' : 'Save Infusion',
+                          )
+                        : const Text(
+                            'Save Infusion',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                             ),
                           ),
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
+
+                const SizedBox(height: 24),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionContainer({
-    required String title,
-    required IconData icon,
-    required List<Widget> children,
-  }) {
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.deepPurple.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: Colors.deepPurple, size: 20),
-              ),
-              SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 16),
-          ...children,
-        ],
+  Widget _buildInputLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 15,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
       ),
     );
   }
@@ -398,21 +429,28 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: DropdownButtonFormField<String>(
         value: _selectedMedicationType.isEmpty ? null : _selectedMedicationType,
         decoration: InputDecoration(
           hintText: 'Select medication type',
-          hintStyle: TextStyle(color: Colors.grey.shade500),
-          prefixIcon: Icon(Icons.bloodtype, color: Colors.deepPurple),
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 15,
+          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
+        dropdownColor: Colors.white,
         items: _medicationTypes.map((type) {
           return DropdownMenuItem<String>(
             value: type,
-            child: Text(type),
+            child: Text(
+              type,
+              style: const TextStyle(fontSize: 15),
+            ),
           );
         }).toList(),
         onChanged: (value) {
@@ -427,10 +465,9 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     );
   }
 
-  Widget _buildCustomInput({
+  Widget _buildCleanInput({
     required TextEditingController controller,
-    required String label,
-    required IconData icon,
+    required String hintText,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
   }) {
@@ -438,25 +475,28 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Colors.grey.shade200),
       ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
         validator: validator,
+        style: const TextStyle(fontSize: 15),
         decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: Colors.grey.shade600),
-          prefixIcon: Icon(icon, color: Colors.deepPurple),
+          hintText: hintText,
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 15,
+          ),
           border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
   Widget _buildDateTimeSelector({
-    required String label,
     required String value,
     required IconData icon,
     required VoidCallback onTap,
@@ -464,41 +504,56 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: Colors.grey.shade200),
         ),
         child: Row(
           children: [
-            Icon(icon, color: Colors.deepPurple, size: 20),
-            SizedBox(width: 12),
+            Icon(
+              icon,
+              color: Colors.grey.shade600,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey.shade600,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              child: Text(
+                value,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: value.contains('Select')
+                      ? Colors.grey.shade500
+                      : Colors.black87,
+                ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNotesInput() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: TextFormField(
+        controller: _notesController,
+        maxLines: 4,
+        style: const TextStyle(fontSize: 15),
+        decoration: InputDecoration(
+          hintText: 'Any additional notes about this infusion...',
+          hintStyle: TextStyle(
+            color: Colors.grey.shade500,
+            fontSize: 15,
+          ),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.all(16),
         ),
       ),
     );

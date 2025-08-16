@@ -20,6 +20,8 @@ class _CreateAccPageState extends State<CreateAccPage> {
 
   bool _isLoading = false;
   bool _showRoleSelection = false;
+  bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _createdUid;
 
   void _register() async {
@@ -59,12 +61,12 @@ class _CreateAccPageState extends State<CreateAccPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text('Error'),
+        title: const Text('Error'),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
+            child: const Text('OK'),
           ),
         ],
       ),
@@ -74,7 +76,26 @@ class _CreateAccPageState extends State<CreateAccPage> {
   void _selectRole(String role) async {
     if (_createdUid == null) return;
     setState(() => _isLoading = true);
-    await FirestoreService().updateUser(_createdUid!, _nameController.text.trim(), _emailController.text.trim(), role);
+    
+    // For medical professionals, add verification status and expiry date
+    Map<String, dynamic>? extraData;
+    if (role == 'medical') {
+      final expiryDate = DateTime.now().add(const Duration(days: 10));
+      extraData = {
+        'isVerified': false,
+        'verificationExpiry': expiryDate.toIso8601String(),
+        'verificationDocuments': [],
+        'verificationStatus': 'pending', // pending, approved, rejected
+      };
+    }
+    
+    await FirestoreService().updateUser(
+      _createdUid!, 
+      _nameController.text.trim(), 
+      _emailController.text.trim(), 
+      role,
+      extra: extraData,
+    );
     setState(() => _isLoading = false);
 
     // Navigate to appropriate screen
@@ -85,6 +106,16 @@ class _CreateAccPageState extends State<CreateAccPage> {
     } else {
       Navigator.pushReplacementNamed(context, '/user_screen');
     }
+  }
+
+  Widget _buildPasswordToggleIcon(bool obscureText, VoidCallback onPressed) {
+    return IconButton(
+      icon: Icon(
+        obscureText ? Icons.visibility : Icons.visibility_off,
+        color: Colors.grey.shade600,
+      ),
+      onPressed: onPressed,
+    );
   }
 
   @override
@@ -101,10 +132,10 @@ class _CreateAccPageState extends State<CreateAccPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Image.asset('assets/images/app_logo.png', width: 80, height: 80),
-                        SizedBox(height: 18),
-                        Text(
+                        const SizedBox(height: 18),
+                        const Text(
                           'Create Account',
                           style: TextStyle(
                             fontSize: 28,
@@ -113,7 +144,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                             letterSpacing: 1.1,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Join RedSyncPH and start managing your hemophilia care.',
                           style: TextStyle(
@@ -123,7 +154,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         _buildInputField(
                           controller: _nameController,
                           label: 'Full Name',
@@ -132,7 +163,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                           validator: (value) =>
                               value == null || value.isEmpty ? 'Enter name' : null,
                         ),
-                        SizedBox(height: 18),
+                        const SizedBox(height: 18),
                         _buildInputField(
                           controller: _emailController,
                           label: 'Email',
@@ -144,31 +175,41 @@ class _CreateAccPageState extends State<CreateAccPage> {
                             return null;
                           },
                         ),
-                        SizedBox(height: 18),
+                        const SizedBox(height: 18),
                         _buildInputField(
                           controller: _passwordController,
                           label: 'Password',
                           icon: Icons.lock_outline,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
+                          suffixIcon: _buildPasswordToggleIcon(_obscurePassword, () {
+                            setState(() {
+                              _obscurePassword = !_obscurePassword;
+                            });
+                          }),
                           validator: (value) {
                             if (value == null || value.isEmpty) return 'Enter password';
                             if (value.length < 6) return 'Password must be at least 6 characters';
                             return null;
                           },
                         ),
-                        SizedBox(height: 18),
+                        const SizedBox(height: 18),
                         _buildInputField(
                           controller: _confirmPasswordController,
                           label: 'Confirm Password',
                           icon: Icons.lock_outline,
-                          obscureText: true,
+                          obscureText: _obscureConfirmPassword,
+                          suffixIcon: _buildPasswordToggleIcon(_obscureConfirmPassword, () {
+                            setState(() {
+                              _obscureConfirmPassword = !_obscureConfirmPassword;
+                            });
+                          }),
                           validator: (value) {
                             if (value == null || value.isEmpty) return 'Confirm your password';
                             if (value != _passwordController.text) return 'Passwords do not match';
                             return null;
                           },
                         ),
-                        SizedBox(height: 28),
+                        const SizedBox(height: 28),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -176,19 +217,19 @@ class _CreateAccPageState extends State<CreateAccPage> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               foregroundColor: Colors.white,
-                              padding: EdgeInsets.symmetric(vertical: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               elevation: 0,
                             ),
                             child: _isLoading
-                                ? SizedBox(
+                                ? const SizedBox(
                                     height: 22,
                                     width: 22,
                                     child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
                                   )
-                                : Text(
+                                : const Text(
                                     'Register',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w600,
@@ -197,11 +238,11 @@ class _CreateAccPageState extends State<CreateAccPage> {
                                   ),
                           ),
                         ),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Already have an account?',
                               style: TextStyle(color: Colors.black87, fontSize: 14),
                             ),
@@ -213,7 +254,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                                 foregroundColor: Colors.redAccent,
                                 padding: EdgeInsets.zero,
                               ),
-                              child: Text(
+                              child: const Text(
                                 'Login',
                                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                               ),
@@ -226,8 +267,8 @@ class _CreateAccPageState extends State<CreateAccPage> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 12),
-                      Text(
+                      const SizedBox(height: 12),
+                      const Text(
                         'Select Your Role',
                         style: TextStyle(
                           fontSize: 24,
@@ -235,7 +276,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                           color: Colors.black87,
                         ),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       _roleTile(
                         icon: FontAwesomeIcons.person,
                         title: 'I\'m a Patient',
@@ -243,7 +284,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                         color: Colors.redAccent,
                         onTap: () => _selectRole('patient'),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       _roleTile(
                         icon: FontAwesomeIcons.personBreastfeeding,
                         title: 'I\'m a Caregiver',
@@ -251,7 +292,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
                         color: Colors.orangeAccent,
                         onTap: () => _selectRole('caregiver'),
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       _roleTile(
                         icon: FontAwesomeIcons.userDoctor,
                         title: 'I\'m a Medical Professional',
@@ -259,9 +300,9 @@ class _CreateAccPageState extends State<CreateAccPage> {
                         color: Colors.blueAccent,
                         onTap: () => _selectRole('medical'),
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       if (_isLoading)
-                        Center(child: CircularProgressIndicator()),
+                        const Center(child: CircularProgressIndicator()),
                     ],
                   ),
           ),
@@ -276,6 +317,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
     required IconData icon,
     TextInputType? keyboardType,
     bool obscureText = false,
+    Widget? suffixIcon,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -286,9 +328,10 @@ class _CreateAccPageState extends State<CreateAccPage> {
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: Colors.redAccent),
-        border: UnderlineInputBorder(),
+        suffixIcon: suffixIcon,
+        border: const UnderlineInputBorder(),
         labelStyle: TextStyle(color: Colors.grey.shade700),
-        focusedBorder: UnderlineInputBorder(
+        focusedBorder: const UnderlineInputBorder(
           borderSide: BorderSide(color: Colors.redAccent, width: 2),
         ),
       ),
@@ -305,7 +348,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
     return ListTile(
       tileColor: color.withOpacity(0.08),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       leading: Icon(icon, size: 32, color: color),
       title: Text(
         title,
@@ -313,7 +356,7 @@ class _CreateAccPageState extends State<CreateAccPage> {
       ),
       subtitle: Text(
         subtitle,
-        style: TextStyle(color: Colors.black87, fontSize: 14),
+        style: const TextStyle(color: Colors.black87, fontSize: 14),
       ),
       trailing: Icon(Icons.arrow_forward_ios, color: color, size: 20),
       onTap: onTap,

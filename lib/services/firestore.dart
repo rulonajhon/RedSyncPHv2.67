@@ -41,7 +41,7 @@ class FirestoreService {
     };
     if (role != null) data['role'] = role;
     if (extra != null) {
-      data.addAll(extra.map((key, value) => MapEntry(key, value as Object)));
+      data.addAll(extra.map((key, value) => MapEntry(key, value)));
     }
     await _db.collection('users').doc(uid).update(data);
   }
@@ -49,6 +49,34 @@ class FirestoreService {
   // Delete
   Future<void> deleteUser(String uid) async {
     await _db.collection('users').doc(uid).delete();
+  }
+
+  // Check and delete expired unverified medical accounts
+  Future<void> cleanupExpiredUnverifiedAccounts() async {
+    try {
+      final now = DateTime.now();
+      final snapshot = await _db
+          .collection('users')
+          .where('role', isEqualTo: 'medical')
+          .where('isVerified', isEqualTo: false)
+          .get();
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final verificationExpiry = data['verificationExpiry'] as String?;
+
+        if (verificationExpiry != null) {
+          final expiryDate = DateTime.parse(verificationExpiry);
+          if (now.isAfter(expiryDate)) {
+            // Delete expired unverified account
+            await deleteUser(doc.id);
+            print('Deleted expired unverified account: ${doc.id}');
+          }
+        }
+      }
+    } catch (e) {
+      print('Error cleaning up expired accounts: $e');
+    }
   }
 
   // Get user profile with hemophilia type
@@ -217,15 +245,16 @@ class FirestoreService {
       final snapshot = await _db
           .collection('users')
           .where('role', isEqualTo: 'medical')
+          .where('isVerified',
+              isEqualTo: true) // Only show verified medical professionals
           .get();
 
       final providers = snapshot.docs
           .map((doc) => {...doc.data(), 'id': doc.id})
           .where((provider) {
-            final name = provider['name']?.toString().toLowerCase() ?? '';
-            return name.contains(query.toLowerCase());
-          })
-          .toList();
+        final name = provider['name']?.toString().toLowerCase() ?? '';
+        return name.contains(query.toLowerCase());
+      }).toList();
 
       return providers;
     } catch (e) {
@@ -427,10 +456,8 @@ class FirestoreService {
   // Get user's preferred calculation settings
   Future<Map<String, dynamic>?> getUserCalculationSettings(String uid) async {
     try {
-      final doc = await _db
-          .collection('user_calculation_settings')
-          .doc(uid)
-          .get();
+      final doc =
+          await _db.collection('user_calculation_settings').doc(uid).get();
       return doc.exists ? doc.data() : null;
     } catch (e) {
       print('Error getting user calculation settings: $e');
@@ -642,10 +669,8 @@ class FirestoreService {
   // Get bleed log statistics
   Future<Map<String, dynamic>> getBleedLogStats(String uid) async {
     try {
-      final querySnapshot = await _db
-          .collection('bleed_logs')
-          .where('uid', isEqualTo: uid)
-          .get();
+      final querySnapshot =
+          await _db.collection('bleed_logs').where('uid', isEqualTo: uid).get();
 
       final logs = querySnapshot.docs.map((doc) => doc.data()).toList();
 
@@ -703,6 +728,8 @@ class FirestoreService {
     required String frequency,
     required TimeOfDay reminderTime,
     required bool notificationEnabled,
+    required DateTime startDate,
+    required DateTime endDate,
     String? notes,
   }) async {
     try {
@@ -715,15 +742,16 @@ class FirestoreService {
         'reminderTimeHour': reminderTime.hour,
         'reminderTimeMinute': reminderTime.minute,
         'notificationEnabled': notificationEnabled,
+        'startDate': Timestamp.fromDate(startDate),
+        'endDate': Timestamp.fromDate(endDate),
         'notes': notes ?? '',
         'isActive': true,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      final docRef = await _db
-          .collection('medication_schedules')
-          .add(scheduleData);
+      final docRef =
+          await _db.collection('medication_schedules').add(scheduleData);
       return docRef.id;
     } catch (e) {
       print('Error saving medication schedule: $e');
@@ -827,8 +855,7 @@ class FirestoreService {
             final reminderData = Map<String, dynamic>.from(schedule);
             reminderData['reminderDateTime'] = reminderTime;
             reminderData['isPending'] = reminderTime.isAfter(now);
-            reminderData['isOverdue'] =
-                reminderTime.isBefore(now) &&
+            reminderData['isOverdue'] = reminderTime.isBefore(now) &&
                 reminderTime.isAfter(now.subtract(Duration(hours: 2)));
             todaysReminders.add(reminderData);
             print(
@@ -990,6 +1017,340 @@ class FirestoreService {
     } catch (e) {
       print('Error getting taken medications: $e');
       return <String>{};
+    }
+  }
+
+  // INFUSION LOG METHODS
+
+  // Save infusion log to Firestore
+  Future<String> saveInfusionLog({
+    required String uid,
+    required String medication,
+    required int doseIU,
+    required String date,
+    required String time,
+    required String notes,
+  }) async {
+    try {
+      final logData = {
+        'uid': uid,
+        'medication': medication,
+        'doseIU': doseIU,
+        'date': date,
+        'time': time,
+        'notes': notes,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      };
+
+      final docRef = await _db.collection('infusion_logs').add(logData);
+      print('Infusion log saved with ID: ${docRef.id}');
+      return docRef.id;
+    } catch (e) {
+      print('Error saving infusion log: $e');
+      rethrow;
+    }
+  }
+
+  // Get infusion logs for a user
+  Future<List<Map<String, dynamic>>> getInfusionLogs(String uid) async {
+    try {
+      print('Fetching infusion logs for user: $uid');
+
+      final querySnapshot = await _db
+          .collection('infusion_logs')
+          .where('uid', isEqualTo: uid)
+          .get();
+
+      print('Found ${querySnapshot.docs.length} infusion logs');
+
+      final logs = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      // Sort by createdAt in descending order (most recent first)
+      logs.sort((a, b) {
+        final aTime = a['createdAt'];
+        final bTime = b['createdAt'];
+
+        // Handle null values
+        if (aTime == null && bTime == null) return 0;
+        if (aTime == null) return 1;
+        if (bTime == null) return -1;
+
+        // Convert Firestore Timestamps to milliseconds for comparison
+        int aMillis = 0;
+        int bMillis = 0;
+
+        if (aTime.runtimeType.toString() == 'Timestamp') {
+          aMillis = (aTime as dynamic).toDate().millisecondsSinceEpoch;
+        } else if (aTime is DateTime) {
+          aMillis = aTime.millisecondsSinceEpoch;
+        } else if (aTime is int) {
+          aMillis = aTime;
+        }
+
+        if (bTime.runtimeType.toString() == 'Timestamp') {
+          bMillis = (bTime as dynamic).toDate().millisecondsSinceEpoch;
+        } else if (bTime is DateTime) {
+          bMillis = bTime.millisecondsSinceEpoch;
+        } else if (bTime is int) {
+          bMillis = bTime;
+        }
+
+        return bMillis.compareTo(aMillis); // Descending order
+      });
+
+      return logs;
+    } catch (e) {
+      print('Error getting infusion logs: $e');
+      return [];
+    }
+  }
+
+  // Get infusion logs for a specific date range
+  Future<List<Map<String, dynamic>>> getInfusionLogsByDateRange({
+    required String uid,
+    required String startDate,
+    required String endDate,
+  }) async {
+    try {
+      final querySnapshot = await _db
+          .collection('infusion_logs')
+          .where('uid', isEqualTo: uid)
+          .where('date', isGreaterThanOrEqualTo: startDate)
+          .where('date', isLessThanOrEqualTo: endDate)
+          .orderBy('date', descending: true)
+          .orderBy('time', descending: true)
+          .get();
+
+      final logs = querySnapshot.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+
+      return logs;
+    } catch (e) {
+      print('Error getting infusion logs by date range: $e');
+      return [];
+    }
+  }
+
+  // Update infusion log
+  Future<void> updateInfusionLog({
+    required String logId,
+    required String medication,
+    required int doseIU,
+    required String date,
+    required String time,
+    required String notes,
+  }) async {
+    try {
+      await _db.collection('infusion_logs').doc(logId).update({
+        'medication': medication,
+        'doseIU': doseIU,
+        'date': date,
+        'time': time,
+        'notes': notes,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+      print('Infusion log updated: $logId');
+    } catch (e) {
+      print('Error updating infusion log: $e');
+      rethrow;
+    }
+  }
+
+  // Delete infusion log
+  Future<void> deleteInfusionLog(String logId) async {
+    try {
+      await _db.collection('infusion_logs').doc(logId).delete();
+      print('Infusion log deleted: $logId');
+    } catch (e) {
+      print('Error deleting infusion log: $e');
+      rethrow;
+    }
+  }
+
+  // =============================================================================================================
+  // ADMIN METHODS
+
+  // Get all pending medical professional verifications
+  Stream<QuerySnapshot> getPendingVerifications() {
+    return _db.collection('users').where('role', isEqualTo: 'medical').where(
+        'verificationStatus',
+        whereIn: ['pending', 'pending_contact']).snapshots();
+  }
+
+  // Get all verified medical professionals
+  Stream<QuerySnapshot> getVerifiedDoctors() {
+    return _db
+        .collection('users')
+        .where('role', isEqualTo: 'medical')
+        .where('verificationStatus', isEqualTo: 'approved')
+        .snapshots();
+  }
+
+  // Get all medical professionals for analytics
+  Stream<QuerySnapshot> getAllMedicalProfessionals() {
+    return _db
+        .collection('users')
+        .where('role', isEqualTo: 'medical')
+        .snapshots();
+  }
+
+  // Approve a medical professional
+  Future<void> approveMedicalProfessional(
+      String uid, String name, String email) async {
+    try {
+      await updateUser(
+        uid,
+        name,
+        email,
+        'medical',
+        extra: {
+          'verificationStatus': 'approved',
+          'isVerified': true,
+          'verificationApprovedAt': DateTime.now().toIso8601String(),
+          'verificationExpiry': null, // Remove expiry date for approved doctors
+        },
+      );
+
+      // Send approval notification
+      await createNotificationWithData(
+        uid: uid,
+        text:
+            'Congratulations! Your medical professional account has been verified and approved.',
+        type: 'verification_approved',
+        data: {
+          'verificationStatus': 'approved',
+          'approvedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      print('Medical professional approved: $uid');
+    } catch (e) {
+      print('Error approving medical professional: $e');
+      rethrow;
+    }
+  }
+
+  // Reject a medical professional
+  Future<void> rejectMedicalProfessional(
+      String uid, String name, String email, String reason) async {
+    try {
+      await updateUser(
+        uid,
+        name,
+        email,
+        'medical',
+        extra: {
+          'verificationStatus': 'rejected',
+          'isVerified': false,
+          'rejectionReason': reason,
+          'verificationRejectedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      // Send rejection notification
+      await createNotificationWithData(
+        uid: uid,
+        text:
+            'Your medical professional verification has been rejected. Reason: $reason',
+        type: 'verification_rejected',
+        data: {
+          'verificationStatus': 'rejected',
+          'rejectionReason': reason,
+          'rejectedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      print('Medical professional rejected: $uid');
+    } catch (e) {
+      print('Error rejecting medical professional: $e');
+      rethrow;
+    }
+  }
+
+  // Revoke verification for a medical professional
+  Future<void> revokeMedicalVerification(
+      String uid, String name, String email) async {
+    try {
+      await updateUser(
+        uid,
+        name,
+        email,
+        'medical',
+        extra: {
+          'verificationStatus': 'rejected',
+          'isVerified': false,
+          'verificationRevokedAt': DateTime.now().toIso8601String(),
+          'rejectionReason': 'Verification revoked by admin',
+        },
+      );
+
+      // Send revocation notification
+      await createNotificationWithData(
+        uid: uid,
+        text:
+            'Your medical professional verification has been revoked by the administrator.',
+        type: 'verification_revoked',
+        data: {
+          'verificationStatus': 'revoked',
+          'revokedAt': DateTime.now().toIso8601String(),
+        },
+      );
+
+      print('Medical professional verification revoked: $uid');
+    } catch (e) {
+      print('Error revoking medical verification: $e');
+      rethrow;
+    }
+  }
+
+  // Get statistics for admin dashboard
+  Future<Map<String, int>> getAdminStatistics() async {
+    try {
+      final medicalSnapshot = await _db
+          .collection('users')
+          .where('role', isEqualTo: 'medical')
+          .get();
+
+      int totalDoctors = medicalSnapshot.docs.length;
+      int pendingDoctors = 0;
+      int approvedDoctors = 0;
+      int rejectedDoctors = 0;
+
+      for (var doc in medicalSnapshot.docs) {
+        final data = doc.data();
+        final status = data['verificationStatus'] ?? 'pending';
+
+        switch (status) {
+          case 'pending':
+          case 'pending_contact':
+            pendingDoctors++;
+            break;
+          case 'approved':
+            approvedDoctors++;
+            break;
+          case 'rejected':
+            rejectedDoctors++;
+            break;
+        }
+      }
+
+      return {
+        'total': totalDoctors,
+        'pending': pendingDoctors,
+        'approved': approvedDoctors,
+        'rejected': rejectedDoctors,
+      };
+    } catch (e) {
+      print('Error getting admin statistics: $e');
+      rethrow;
     }
   }
 }

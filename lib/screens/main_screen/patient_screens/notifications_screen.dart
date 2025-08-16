@@ -24,7 +24,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (uid.isNotEmpty) {
       await _firestoreService.markAllNotificationsAsRead(uid);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('All notifications marked as read'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: Colors.green,
@@ -38,8 +38,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Delete All Notifications'),
-          content: Text(
+          title: const Text('Delete All Notifications'),
+          content: const Text(
             'Are you sure you want to delete all notifications? This action cannot be undone.',
           ),
           shape: RoundedRectangleBorder(
@@ -48,7 +48,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: Text('Cancel'),
+              child: const Text('Cancel'),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -56,7 +56,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 if (uid.isNotEmpty) {
                   await _firestoreService.deleteAllNotifications(uid);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('All notifications deleted'),
                       behavior: SnackBarBehavior.floating,
                       backgroundColor: Colors.orange,
@@ -67,7 +67,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.redAccent,
               ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
+              child: const Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -80,7 +80,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Notifications',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -90,15 +90,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           IconButton(
             onPressed: _markAllAsRead,
-            icon: Icon(FontAwesomeIcons.checkDouble, size: 18),
+            icon: const Icon(FontAwesomeIcons.checkDouble, size: 18),
             tooltip: 'Mark all as read',
           ),
           IconButton(
             onPressed: _deleteAll,
-            icon: Icon(FontAwesomeIcons.trash, size: 18),
+            icon: const Icon(FontAwesomeIcons.trash, size: 18),
             tooltip: 'Delete all',
           ),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
         ],
       ),
       body: SafeArea(
@@ -149,7 +149,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
+          const SizedBox(
             width: 32,
             height: 32,
             child: CircularProgressIndicator(
@@ -157,7 +157,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               color: Colors.redAccent,
             ),
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             'Loading notifications...',
             style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
@@ -185,7 +185,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               size: 32,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
             'Error loading notifications',
             style: TextStyle(
@@ -194,12 +194,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               color: Colors.grey.shade700,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Please try again later',
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton(
             onPressed: () => setState(() {}),
             style: ElevatedButton.styleFrom(
@@ -209,7 +209,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Text('Retry'),
+            child: const Text('Retry'),
           ),
         ],
       ),
@@ -219,7 +219,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget _buildEmptyState() {
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -236,7 +236,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 size: 40,
               ),
             ),
-            SizedBox(height: 32),
+            const SizedBox(height: 32),
             Text(
               'No notifications yet',
               style: TextStyle(
@@ -245,7 +245,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 color: Colors.grey.shade700,
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Important updates and messages will appear here',
               style: TextStyle(
@@ -266,7 +266,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
           child: Text(
             'Recent',
             style: TextStyle(
@@ -278,7 +278,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         ),
         Expanded(
           child: ListView.builder(
-            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
             itemCount: docs.length,
             itemBuilder: (context, index) {
               final doc = docs[index];
@@ -300,8 +300,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final timestamp = data['timestamp'];
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isRead ? Colors.grey.shade50 : Colors.red.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -337,7 +337,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 size: 16,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,7 +362,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         Container(
                           width: 8,
                           height: 8,
-                          margin: EdgeInsets.only(top: 4, left: 8),
+                          margin: const EdgeInsets.only(top: 4, left: 8),
                           decoration: BoxDecoration(
                             color: Colors.redAccent,
                             borderRadius: BorderRadius.circular(4),
@@ -370,7 +370,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         ),
                     ],
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     _formatTime(timestamp),
                     style: TextStyle(
@@ -494,17 +494,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Bleeding Episode Details'),
+        title: const Text('Bleeding Episode Details'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Patient: ${patientName ?? 'Unknown'}'),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text('Date: ${data['date'] ?? 'Unknown'}'),
             Text('Body Region: ${data['bodyRegion'] ?? 'Unknown'}'),
             Text('Severity: ${data['severity'] ?? 'Unknown'}'),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Text(
               'This patient has logged a bleeding episode. You can view their complete medical history by accessing their patient profile.',
               style: TextStyle(color: Colors.grey.shade600),
@@ -514,7 +514,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
+            child: const Text('Close'),
           ),
           ElevatedButton(
             onPressed: () {
@@ -522,14 +522,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               // Navigate to patient details if available
               // This would require importing the patient details screen
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+                const SnackBar(
                   content: Text('View patient details in your patients list'),
                   backgroundColor: Colors.blue,
                 ),
               );
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-            child: Text('View Patient', style: TextStyle(color: Colors.white)),
+            child: const Text('View Patient', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

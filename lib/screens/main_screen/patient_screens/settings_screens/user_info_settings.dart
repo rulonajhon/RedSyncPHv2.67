@@ -81,7 +81,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
       );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Profile updated!'),
           backgroundColor: Colors.green,
         ),
@@ -94,7 +94,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Edit Profile',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -102,153 +102,151 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
         elevation: 0,
       ),
       body: _isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: EdgeInsets.all(24),
-              child: SafeArea(
-                child: Column(
-                  children: [
-                    // Profile Header Section
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade50,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: Colors.grey.shade200),
-                      ),
-                      child: Column(
-                        children: [
-                          Stack(
-                            children: [
-                              CircleAvatar(
-                                radius: 50,
-                                backgroundColor: Colors.grey.shade300,
-                                backgroundImage: photoUrl.isNotEmpty
-                                    ? NetworkImage(photoUrl)
-                                    : null,
-                                child: photoUrl.isEmpty
-                                    ? Icon(
-                                        Icons.person,
-                                        size: 40,
-                                        color: Colors.grey.shade600,
-                                      )
-                                    : null,
-                              ),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Container(
-                                  width: 32,
-                                  height: 32,
-                                  decoration: BoxDecoration(
-                                    color: Colors.redAccent,
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(color: Colors.white, width: 2),
-                                  ),
-                                  child: Icon(
-                                    Icons.camera_alt,
-                                    color: Colors.white,
-                                    size: 16,
-                                  ),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                children: [
+                  // Profile Header Section
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade50,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade200),
+                    ),
+                    child: Column(
+                      children: [
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.grey.shade300,
+                              backgroundImage: photoUrl.isNotEmpty
+                                  ? NetworkImage(photoUrl)
+                                  : null,
+                              child: photoUrl.isEmpty
+                                  ? Icon(
+                                      Icons.person,
+                                      size: 40,
+                                      color: Colors.grey.shade600,
+                                    )
+                                  : null,
+                            ),
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(color: Colors.white, width: 2),
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt,
+                                  color: Colors.white,
+                                  size: 16,
                                 ),
                               ),
-                            ],
-                          ),
-                          SizedBox(height: 16),
-                          Text(
-                            name.isEmpty ? 'Loading...' : name,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: Colors.black87,
                             ),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            email,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    
-                    SizedBox(height: 32),
-                    
-                    // Personal Information Section
-                    _buildSectionHeader('Personal Information', Icons.person_outline),
-                    SizedBox(height: 16),
-                    
-                    _buildInfoTile(
-                      icon: Icons.wc,
-                      title: 'Gender',
-                      value: gender,
-                      onTap: () => _showGenderDialog(),
-                    ),
-                    
-                    SizedBox(height: 16),
-                    
-                    _buildInfoTile(
-                      icon: Icons.cake,
-                      title: 'Date of Birth',
-                      value: dob == null
-                          ? 'Not set'
-                          : '${dob!.day}/${dob!.month}/${dob!.year}',
-                      onTap: () => _selectDateOfBirth(),
-                    ),
-                    
-                    SizedBox(height: 16),
-                    
-                    _buildWeightTile(),
-                    
-                    SizedBox(height: 32),
-                    
-                    // Medical Information Section
-                    _buildSectionHeader('Medical Information', Icons.medical_services),
-                    SizedBox(height: 16),
-                    
-                    _buildInfoTile(
-                      icon: Icons.bloodtype,
-                      title: 'Hemophilia Type',
-                      value: hemophiliaType,
-                      onTap: () => _showHemophiliaTypeDialog(),
-                    ),
-                    
-                    SizedBox(height: 40),
-                    
-                    // Save Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton.icon(
-                        onPressed: _isLoading ? null : _saveProfile,
-                        icon: Icon(
-                          Icons.save,
-                          color: Colors.white,
-                          size: 20,
+                          ],
                         ),
-                        label: Text(
-                          'Save Changes',
+                        const SizedBox(height: 16),
+                        Text(
+                          name.isEmpty ? 'Loading...' : name,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          email,
                           style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.white,
+                            fontSize: 14,
+                            color: Colors.grey.shade600,
                           ),
                         ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Personal Information Section
+                  _buildSectionHeader('Personal Information', Icons.person_outline),
+                  const SizedBox(height: 16),
+                  
+                  _buildInfoTile(
+                    icon: Icons.wc,
+                    title: 'Gender',
+                    value: gender,
+                    onTap: () => _showGenderDialog(),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildInfoTile(
+                    icon: Icons.cake,
+                    title: 'Date of Birth',
+                    value: dob == null
+                        ? 'Not set'
+                        : '${dob!.day}/${dob!.month}/${dob!.year}',
+                    onTap: () => _selectDateOfBirth(),
+                  ),
+                  
+                  const SizedBox(height: 16),
+                  
+                  _buildWeightTile(),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Medical Information Section
+                  _buildSectionHeader('Medical Information', Icons.medical_services),
+                  const SizedBox(height: 16),
+                  
+                  _buildInfoTile(
+                    icon: Icons.bloodtype,
+                    title: 'Hemophilia Type',
+                    value: hemophiliaType,
+                    onTap: () => _showHemophiliaTypeDialog(),
+                  ),
+                  
+                  const SizedBox(height: 40),
+                  
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton.icon(
+                      onPressed: _isLoading ? null : _saveProfile,
+                      icon: const Icon(
+                        Icons.save,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      label: const Text(
+                        'Save Changes',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.white,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.redAccent,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
     );
@@ -258,7 +256,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
     return Row(
       children: [
         Container(
-          padding: EdgeInsets.all(8),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color: Colors.redAccent.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
@@ -269,10 +267,10 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
             size: 20,
           ),
         ),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
@@ -291,7 +289,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
           borderRadius: BorderRadius.circular(12),
@@ -312,7 +310,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
                 size: 24,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -325,10 +323,10 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: Colors.black87,
@@ -350,7 +348,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
 
   Widget _buildWeightTile() {
     return Container(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -371,7 +369,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
               size: 24,
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -384,7 +382,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _weightController, // Use the dedicated controller
                   decoration: InputDecoration(
@@ -394,12 +392,12 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
                     isDense: true,
                     hintStyle: TextStyle(color: Colors.grey.shade400),
                   ),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
-                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
                   onChanged: (val) => setState(() => weight = val),
                 ),
               ],
@@ -414,7 +412,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
     final selected = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Select Gender',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -424,7 +422,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
             ListTile(
               title: Text(g),
               onTap: () => Navigator.pop(context, g),
-              trailing: gender == g ? Icon(Icons.check, color: Colors.redAccent) : null,
+              trailing: gender == g ? const Icon(Icons.check, color: Colors.redAccent) : null,
               contentPadding: EdgeInsets.zero,
             ),
           ).toList(),
@@ -439,7 +437,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
     final selected = await showDialog<String>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Select Hemophilia Type',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -449,7 +447,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
             ListTile(
               title: Text(h),
               onTap: () => Navigator.pop(context, h),
-              trailing: hemophiliaType == h ? Icon(Icons.check, color: Colors.redAccent) : null,
+              trailing: hemophiliaType == h ? const Icon(Icons.check, color: Colors.redAccent) : null,
               contentPadding: EdgeInsets.zero,
             ),
           ).toList(),
@@ -469,7 +467,7 @@ class _UserInfoSettingsState extends State<UserInfoSettings> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
+            colorScheme: const ColorScheme.light(
               primary: Colors.redAccent,
               onPrimary: Colors.white,
             ),

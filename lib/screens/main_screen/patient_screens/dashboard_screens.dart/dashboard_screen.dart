@@ -12,31 +12,48 @@ class Dashboard extends StatefulWidget {
   State<Dashboard> createState() => _DashboardState();
 }
 
-class _DashboardState extends State<Dashboard> {
+class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
   final FirestoreService _firestoreService = FirestoreService();
-  final FlutterSecureStorage _secureStorage = FlutterSecureStorage();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   String _userName = '';
   bool _isLoading = true;
   bool _isGuest = false;
-  List<Map<String, dynamic>> _recentBleeds = [];
-  List<Map<String, dynamic>> _recentInfusions = [];
   List<Map<String, dynamic>> _recentActivities = [];
   List<Map<String, dynamic>> _todaysReminders = [];
+  int _monthlyActivitiesCount = 0;
+  int _weeklyInfusionsCount = 0;
+  int _weeklyBleedsCount = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadUserData();
-    _loadRecentActivities();
-    _loadTodaysReminders();
+    _refreshAllData();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // App came back to foreground, refresh data
+      print('App resumed, refreshing dashboard data...');
+      _refreshAllData();
+    }
   }
 
   @override
   void didUpdateWidget(Dashboard oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Refresh data when the widget updates
-    _loadRecentActivities();
-    _loadTodaysReminders();
+    print('Dashboard widget updated, refreshing data...');
+    _refreshAllData();
   }
 
   Future<void> _loadUserData() async {
@@ -74,64 +91,137 @@ class _DashboardState extends State<Dashboard> {
   Future<void> _loadRecentActivities() async {
     try {
       final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        print('Loading recent activities for user: ${user.uid}'); // Debug log
-
-        // Load recent bleeds from Firestore
-        final bleeds = await _firestoreService.getBleedLogs(user.uid, limit: 5);
-        _recentBleeds = bleeds;
-        print('Loaded ${bleeds.length} bleed logs'); // Debug log
-
-        // Load recent dosage calculations from Firestore
-        final dosageHistory = await _firestoreService
-            .getDosageCalculationHistory(user.uid, limit: 5);
-        _recentInfusions = dosageHistory;
-        print(
-          'Loaded ${dosageHistory.length} dosage calculations',
-        ); // Debug log
-
-        // Combine all activities and sort by timestamp
-        List<Map<String, dynamic>> allActivities = [];
-
-        // Add bleeds with activity type
-        for (var bleed in bleeds) {
-          allActivities.add({
-            ...bleed,
-            'activityType': 'bleed',
-            'timestamp': bleed['createdAt']?.millisecondsSinceEpoch ?? 0,
-          });
-        }
-
-        // Add dosage calculations as infusion activities
-        for (var dosage in dosageHistory) {
-          allActivities.add({
-            ...dosage,
-            'activityType': 'infusion',
-            'timestamp':
-                dosage['createdAt']?.millisecondsSinceEpoch ??
-                dosage['timestamp'] ??
-                0,
-          });
-        }
-
-        // Sort by timestamp (most recent first)
-        allActivities.sort(
-          (a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0),
-        );
-
-        // Take only the 5 most recent activities
-        _recentActivities = allActivities.take(5).toList();
-        print(
-          'Total recent activities: ${_recentActivities.length}',
-        ); // Debug log
-
-        setState(() {});
-      } else {
-        print('No user logged in'); // Debug log
+      if (user == null) {
+        print('No user logged in');
+        return;
       }
+
+      print('Loading recent activities for user: ${user.uid}');
+
+      // Load all data in parallel for better performance
+      // Get more records to ensure we have enough for calculations and display
+      final results = await Future.wait([
+        _firestoreService.getBleedLogs(user.uid, limit: 20),
+        _firestoreService.getDosageCalculationHistory(user.uid, limit: 20),
+        _firestoreService.getInfusionLogs(user.uid),
+      ]);
+
+      final bleeds = results[0];
+      final dosageHistory = results[1];
+      final infusionLogs = results[2];
+
+      print(
+          'Loaded ${bleeds.length} bleeds, ${dosageHistory.length} calculations, ${infusionLogs.length} infusions');
+
+      // Combine all activities and sort by timestamp
+      List<Map<String, dynamic>> allActivities = [];
+
+      // Add bleeds with activity type
+      for (var bleed in bleeds) {
+        allActivities.add({
+          ...bleed,
+          'activityType': 'bleed',
+          'timestamp': _extractTimestamp(bleed['createdAt']),
+        });
+      }
+
+      // Add dosage calculations as calculation activities
+      for (var dosage in dosageHistory) {
+        int timestamp = _extractTimestamp(dosage['createdAt']);
+        if (timestamp == 0) {
+          timestamp = dosage['timestamp'] ?? 0;
+        }
+        allActivities.add({
+          ...dosage,
+          'activityType': 'calculation',
+          'timestamp': timestamp,
+        });
+      }
+
+      // Add infusion logs as infusion activities
+      for (var infusion in infusionLogs.take(5)) {
+        allActivities.add({
+          ...infusion,
+          'activityType': 'infusion',
+          'timestamp': _extractTimestamp(infusion['createdAt']),
+        });
+      }
+
+      // Sort by timestamp (most recent first)
+      allActivities.sort(
+        (a, b) => (b['timestamp'] ?? 0).compareTo(a['timestamp'] ?? 0),
+      );
+
+      // Take only the 5 most recent activities
+      _recentActivities = allActivities.take(5).toList();
+
+      // Calculate counts efficiently using the same data
+      _calculateCounts(bleeds, infusionLogs);
+
+      setState(() {});
     } catch (e) {
       print('Error loading recent activities: $e');
     }
+  }
+
+  void _calculateCounts(
+      List<Map<String, dynamic>> bleeds, List<Map<String, dynamic>> infusions) {
+    final now = DateTime.now();
+
+    // Calculate monthly activities (bleeds + infusions from current month)
+    final currentMonthBleeds = bleeds.where((bleed) {
+      try {
+        final bleedDate = DateTime.parse(bleed['date'] ?? '');
+        return bleedDate.year == now.year && bleedDate.month == now.month;
+      } catch (e) {
+        return false;
+      }
+    }).length;
+
+    final currentMonthInfusions = infusions.where((infusion) {
+      try {
+        final infusionDate = DateTime.parse(infusion['date'] ?? '');
+        return infusionDate.year == now.year && infusionDate.month == now.month;
+      } catch (e) {
+        return false;
+      }
+    }).length;
+
+    // Calculate weekly infusions (infusions from current week)
+    final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+    final startOfWeekDate =
+        DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+
+    final currentWeekInfusions = infusions.where((infusion) {
+      try {
+        final infusionDate = DateTime.parse(infusion['date'] ?? '');
+        return infusionDate
+                .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
+            infusionDate.isBefore(now.add(const Duration(days: 1)));
+      } catch (e) {
+        return false;
+      }
+    }).length;
+
+    // Calculate weekly bleeds (bleeds from current week)
+    final currentWeekBleeds = bleeds.where((bleed) {
+      try {
+        final bleedDate = DateTime.parse(bleed['date'] ?? '');
+        return bleedDate
+                .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
+            bleedDate.isBefore(now.add(const Duration(days: 1)));
+      } catch (e) {
+        return false;
+      }
+    }).length;
+
+    // Update counts
+    _monthlyActivitiesCount = currentMonthBleeds + currentMonthInfusions;
+    _weeklyInfusionsCount = currentWeekInfusions;
+    _weeklyBleedsCount = currentWeekBleeds;
+
+    print(
+        'Counts - Monthly: $_monthlyActivitiesCount, Weekly infusions: $_weeklyInfusionsCount, Weekly bleeds: $_weeklyBleedsCount');
   }
 
   Future<void> _loadTodaysReminders() async {
@@ -151,6 +241,15 @@ class _DashboardState extends State<Dashboard> {
     }
   }
 
+  // Method to refresh all dashboard data - can be called from other screens
+  Future<void> _refreshAllData() async {
+    print('Refreshing all dashboard data...');
+    await Future.wait([
+      _loadRecentActivities(), // This now handles all counts efficiently
+      _loadTodaysReminders(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeOfDay = _getTimeOfDay();
@@ -159,11 +258,10 @@ class _DashboardState extends State<Dashboard> {
       body: RefreshIndicator(
         onRefresh: () async {
           await _loadUserData();
-          await _loadRecentActivities();
-          await _loadTodaysReminders();
+          await _refreshAllData();
         },
         child: SingleChildScrollView(
-          physics: AlwaysScrollableScrollPhysics(),
+          physics: const AlwaysScrollableScrollPhysics(),
           child: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
@@ -185,14 +283,14 @@ class _DashboardState extends State<Dashboard> {
                         size: 28,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             '$timeOfDay${_isLoading ? '!' : ', $_userName!'}',
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.black87,
@@ -213,10 +311,10 @@ class _DashboardState extends State<Dashboard> {
 
                 // Guest Mode Indicator
                 if (_isGuest) ...[
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -229,7 +327,7 @@ class _DashboardState extends State<Dashboard> {
                           color: Colors.blue.shade700,
                           size: 20,
                         ),
-                        SizedBox(width: 12),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -242,7 +340,7 @@ class _DashboardState extends State<Dashboard> {
                                   fontSize: 14,
                                 ),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'Data won\'t be saved. Create an account to track your health progress.',
                                 style: TextStyle(
@@ -262,9 +360,9 @@ class _DashboardState extends State<Dashboard> {
                           },
                           style: TextButton.styleFrom(
                             foregroundColor: Colors.blue.shade700,
-                            padding: EdgeInsets.symmetric(horizontal: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Sign Up',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
@@ -277,11 +375,11 @@ class _DashboardState extends State<Dashboard> {
                   ),
                 ],
 
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
 
                 // Quick Stats Section
                 _buildQuickStats(),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
 
                 // Reminders Section
                 _buildSection(
@@ -298,13 +396,13 @@ class _DashboardState extends State<Dashboard> {
                     else
                       ..._todaysReminders.map(
                         (reminder) => Padding(
-                          padding: EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: _buildSwipeableMedicationReminder(reminder),
                         ),
                       ),
                   ],
                 ),
-                SizedBox(height: 32),
+                const SizedBox(height: 32),
 
                 // Recent Activity Section
                 _buildSection(
@@ -320,32 +418,29 @@ class _DashboardState extends State<Dashboard> {
                     else
                       ..._recentActivities.map(
                         (activity) => Padding(
-                          padding: EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.only(bottom: 5),
                           child: _buildActivityItem(
-                            icon: activity['activityType'] == 'bleed'
-                                ? FontAwesomeIcons.droplet
-                                : FontAwesomeIcons.syringe,
-                            title: activity['activityType'] == 'bleed'
-                                ? 'Bleed Logged'
-                                : 'Dosage Calculated',
-                            subtitle: activity['activityType'] == 'bleed'
-                                ? '${activity['bodyRegion'] ?? 'Unknown'} • ${activity['severity'] ?? 'Unknown'}'
-                                : '${activity['factorType'] ?? 'Factor'} ${activity['dosage'] ?? '0'} IU',
+                            icon: _getActivityIcon(activity['activityType']),
+                            title: _getActivityTitle(activity['activityType']),
+                            subtitle: _getActivitySubtitle(activity),
                             time: _formatActivityTime(activity),
-                            iconColor: activity['activityType'] == 'bleed'
-                                ? Colors.red
-                                : Colors.purple,
+                            iconColor: _getActivityColor(
+                              activity['activityType'],
+                            ),
                           ),
                         ),
                       ),
                   ],
                 ),
-                SizedBox(height: 50), // Add extra spacing at bottom instead of FAB space
+                const SizedBox(
+                  height: 50,
+                ), // Add extra spacing at bottom instead of FAB space
               ],
             ),
           ),
         ),
-    ));
+      ),
+    );
   }
 
   Widget _buildQuickStats() {
@@ -354,26 +449,26 @@ class _DashboardState extends State<Dashboard> {
         Expanded(
           child: _buildStatContainer(
             icon: FontAwesomeIcons.droplet,
-            value: '${_recentBleeds.length}',
+            value: '$_weeklyBleedsCount',
             label: 'Recent Bleeds',
             color: Colors.red,
           ),
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 10),
         Expanded(
           child: _buildStatContainer(
             icon: FontAwesomeIcons.syringe,
-            value: '${_recentInfusions.length}',
-            label: 'This Week',
+            value: '$_weeklyInfusionsCount',
+            label: 'Infusions This Week',
             color: Colors.purple,
           ),
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 10),
         Expanded(
           child: _buildStatContainer(
             icon: FontAwesomeIcons.calendar,
-            value: '${_recentActivities.length}',
-            label: 'Activities',
+            value: '${_monthlyActivitiesCount}',
+            label: 'Activities This Month',
             color: Colors.blue,
           ),
         ),
@@ -388,7 +483,7 @@ class _DashboardState extends State<Dashboard> {
     required Color color,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
@@ -397,7 +492,7 @@ class _DashboardState extends State<Dashboard> {
       child: Column(
         children: [
           Icon(icon, color: color, size: 24),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             value,
             style: TextStyle(
@@ -427,17 +522,17 @@ class _DashboardState extends State<Dashboard> {
         Row(
           children: [
             Container(
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.grey.shade100,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 20, color: Colors.grey.shade700),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 color: Colors.black87,
@@ -445,7 +540,7 @@ class _DashboardState extends State<Dashboard> {
             ),
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         ...children,
       ],
     );
@@ -458,7 +553,7 @@ class _DashboardState extends State<Dashboard> {
     required Color iconColor,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -475,20 +570,20 @@ class _DashboardState extends State<Dashboard> {
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
@@ -509,7 +604,7 @@ class _DashboardState extends State<Dashboard> {
     required Color iconColor,
   }) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -526,20 +621,20 @@ class _DashboardState extends State<Dashboard> {
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 16,
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   subtitle,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
@@ -560,6 +655,9 @@ class _DashboardState extends State<Dashboard> {
     try {
       if (activity['activityType'] == 'bleed') {
         // For bleeds, use the date field
+        return activity['date'] ?? 'Unknown';
+      } else if (activity['activityType'] == 'infusion') {
+        // For infusion logs, use the date field
         return activity['date'] ?? 'Unknown';
       } else {
         // For dosage calculations, format the timestamp
@@ -582,7 +680,7 @@ class _DashboardState extends State<Dashboard> {
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(32),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -591,7 +689,7 @@ class _DashboardState extends State<Dashboard> {
       child: Column(
         children: [
           Icon(icon, size: 48, color: Colors.grey.shade400),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             title,
             style: TextStyle(
@@ -600,7 +698,7 @@ class _DashboardState extends State<Dashboard> {
               color: Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 4),
+          const SizedBox(height: 4),
           Text(
             subtitle,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
@@ -629,7 +727,7 @@ class _DashboardState extends State<Dashboard> {
     return Slidable(
       key: ValueKey(reminder['id']),
       endActionPane: ActionPane(
-        motion: ScrollMotion(),
+        motion: const ScrollMotion(),
         children: [
           SlidableAction(
             onPressed: (context) => _markMedicationTaken(reminder),
@@ -673,20 +771,20 @@ class _DashboardState extends State<Dashboard> {
         : 'Unknown';
 
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isOverdue
             ? Colors.red.shade50
             : isPending
-            ? Colors.orange.shade50
-            : Colors.green.shade50,
+                ? Colors.orange.shade50
+                : Colors.green.shade50,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isOverdue
               ? Colors.red.shade200
               : isPending
-              ? Colors.orange.shade200
-              : Colors.green.shade200,
+                  ? Colors.orange.shade200
+                  : Colors.green.shade200,
         ),
       ),
       child: Row(
@@ -700,7 +798,7 @@ class _DashboardState extends State<Dashboard> {
             ),
             child: Icon(icon, color: iconColor, size: 20),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -711,7 +809,7 @@ class _DashboardState extends State<Dashboard> {
                     Expanded(
                       child: Text(
                         reminder['medicationName'] ?? 'Unknown Medication',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 16,
                           color: Colors.black87,
@@ -719,7 +817,8 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: iconColor.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(6),
@@ -735,12 +834,12 @@ class _DashboardState extends State<Dashboard> {
                     ),
                   ],
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '${reminder['dosage'] ?? 'Unknown dosage'} • ${reminder['administrationType'] ?? 'Unknown type'}',
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -752,7 +851,8 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(6),
@@ -765,7 +865,7 @@ class _DashboardState extends State<Dashboard> {
                             size: 12,
                             color: Colors.grey.shade600,
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
                             'Swipe to mark done',
                             style: TextStyle(
@@ -796,7 +896,7 @@ class _DashboardState extends State<Dashboard> {
 
       // Show success feedback
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Row(
             children: [
               Icon(Icons.check_circle, color: Colors.white),
@@ -814,11 +914,91 @@ class _DashboardState extends State<Dashboard> {
     } catch (e) {
       print('Error marking medication as taken: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Failed to mark medication as taken'),
           backgroundColor: Colors.red,
         ),
       );
     }
+  }
+
+  // Helper methods for activity display
+  IconData _getActivityIcon(String? activityType) {
+    switch (activityType) {
+      case 'bleed':
+        return FontAwesomeIcons.droplet;
+      case 'infusion':
+        return FontAwesomeIcons.syringe;
+      case 'calculation':
+        return FontAwesomeIcons.calculator;
+      default:
+        return FontAwesomeIcons.question;
+    }
+  }
+
+  String _getActivityTitle(String? activityType) {
+    switch (activityType) {
+      case 'bleed':
+        return 'Bleed Logged';
+      case 'infusion':
+        return 'Infusion Logged';
+      case 'calculation':
+        return 'Dosage Calculated';
+      default:
+        return 'Unknown Activity';
+    }
+  }
+
+  String _getActivitySubtitle(Map<String, dynamic> activity) {
+    switch (activity['activityType']) {
+      case 'bleed':
+        return '${activity['bodyRegion'] ?? 'Unknown'} • ${activity['severity'] ?? 'Unknown'}';
+      case 'infusion':
+        return '${activity['medication'] ?? 'Unknown medication'} • ${activity['doseIU'] ?? '0'} IU';
+      case 'calculation':
+        final hemophiliaType = activity['hemophiliaType'] ?? 'Factor';
+        final calculatedDosage = activity['calculatedDosage'];
+        final dosageStr = calculatedDosage != null
+            ? '${calculatedDosage.round()} IU'
+            : '0 IU';
+        return '$hemophiliaType • $dosageStr';
+      default:
+        return 'No details available';
+    }
+  }
+
+  Color _getActivityColor(String? activityType) {
+    switch (activityType) {
+      case 'bleed':
+        return Colors.red;
+      case 'infusion':
+        return Colors.purple;
+      case 'calculation':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Helper method to extract timestamp from various Firestore timestamp formats
+  int _extractTimestamp(dynamic timestamp) {
+    if (timestamp == null) return 0;
+
+    // If it's already a DateTime
+    if (timestamp is DateTime) {
+      return timestamp.millisecondsSinceEpoch;
+    }
+
+    // If it's a Firestore Timestamp
+    if (timestamp.runtimeType.toString() == 'Timestamp') {
+      return (timestamp as dynamic).toDate().millisecondsSinceEpoch;
+    }
+
+    // If it's already milliseconds
+    if (timestamp is int) {
+      return timestamp;
+    }
+
+    return 0;
   }
 }

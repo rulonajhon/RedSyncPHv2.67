@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../services/firestore.dart';
+import '../../../services/data_sharing_service.dart';
 
 class CareProviderScreen extends StatefulWidget {
   const CareProviderScreen({super.key});
@@ -13,15 +12,37 @@ class CareProviderScreen extends StatefulWidget {
 
 class _CareProviderScreenState extends State<CareProviderScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  final DataSharingService _dataSharingService = DataSharingService();
   final TextEditingController _searchController = TextEditingController();
-  final TextEditingController _emergencyContactController =
-      TextEditingController();
-
   List<Map<String, dynamic>> _filteredProviders = [];
+  List<Map<String, dynamic>> _sharedProviders = [];
   bool _isSearching = false;
 
-  void _onSearchChanged(String query) async {
-    if (query.isEmpty) {
+  @override
+  void initState() {
+    super.initState();
+    _loadSharedProviders();
+  }
+
+  void _loadSharedProviders() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser != null) {
+      try {
+        final sharedWith =
+            await _dataSharingService.getAuthorizedHealthcareProviders();
+        if (mounted) {
+          setState(() {
+            _sharedProviders = sharedWith;
+          });
+        }
+      } catch (e) {
+        print('Error loading shared providers: $e');
+      }
+    }
+  }
+
+  void _onSearchChanged(String searchText) async {
+    if (searchText.isEmpty) {
       setState(() {
         _filteredProviders = [];
         _isSearching = false;
@@ -29,218 +50,59 @@ class _CareProviderScreenState extends State<CareProviderScreen> {
       return;
     }
 
-    setState(() => _isSearching = true);
-    try {
-      final providers = await _firestoreService.searchHealthcareProviders(
-        query,
-      );
-      setState(() {
-        _filteredProviders = providers;
-        _isSearching = false;
-      });
-    } catch (e) {
-      setState(() => _isSearching = false);
-      _showError('Error searching providers: $e');
-    }
-  }
-
-  void _addEmergencyContact() async {
-    final contactPhone = _emergencyContactController.text.trim();
-    if (contactPhone.isEmpty) {
-      _showError('Please enter a phone number');
-      return;
-    }
+    setState(() {
+      _isSearching = true;
+    });
 
     try {
-      final uid = FirebaseAuth.instance.currentUser?.uid;
-      if (uid != null) {
-        await _firestoreService.addEmergencyContact(uid, contactPhone);
-        _emergencyContactController.clear();
-        Navigator.of(context).pop();
-        _showSuccess('Emergency contact added successfully');
+      final results =
+          await _firestoreService.searchHealthcareProviders(searchText);
+      if (mounted) {
+        setState(() {
+          _filteredProviders = results;
+          _isSearching = false;
+        });
       }
     } catch (e) {
-      _showError('Error adding emergency contact: $e');
+      if (mounted) {
+        setState(() {
+          _filteredProviders = [];
+          _isSearching = false;
+        });
+      }
+      print('Search error: $e');
     }
   }
 
-  void _editEmergencyContact(String contactId, String currentPhone) {
-    _emergencyContactController.text = currentPhone;
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (BuildContext context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-          ),
-          child: SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    'Edit Emergency Contact',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _emergencyContactController,
-                    keyboardType: TextInputType.phone,
-                    decoration: InputDecoration(
-                      hintText: 'Enter phone number',
-                      prefixIcon: Icon(Icons.phone, color: Colors.redAccent),
-                      border: UnderlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            final newPhone = _emergencyContactController.text
-                                .trim();
-                            if (newPhone.isNotEmpty) {
-                              try {
-                                await _firestoreService.updateEmergencyContact(
-                                  contactId,
-                                  newPhone,
-                                );
-                                _emergencyContactController.clear();
-                                Navigator.of(context).pop();
-                                _showSuccess(
-                                  'Emergency contact updated successfully',
-                                );
-                              } catch (e) {
-                                _showError(
-                                  'Error updating emergency contact: $e',
-                                );
-                              }
-                            }
-                          },
-                          child: Text(
-                            'Update',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.red,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: () async {
-                            Navigator.of(context).pop();
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('Delete Contact'),
-                                content: Text(
-                                  'Are you sure you want to delete this emergency contact?',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: Text('Delete'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              try {
-                                await _firestoreService.deleteEmergencyContact(
-                                  contactId,
-                                );
-                                _showSuccess(
-                                  'Emergency contact deleted successfully',
-                                );
-                              } catch (e) {
-                                _showError(
-                                  'Error deleting emergency contact: $e',
-                                );
-                              }
-                            }
-                          },
-                          child: Text(
-                            'Delete',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
-  }
-
-  void _showSuccess(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.green),
-    );
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Healthcare Providers',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline),
+            icon: const Icon(Icons.info_outline),
             onPressed: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
-                  title: Text('Healthcare Providers'),
-                  content: Text(
+                  title: const Text('Healthcare Providers'),
+                  content: const Text(
                     'Search for healthcare professionals by name to connect with them for your hemophilia care.',
                   ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('OK'),
+                      child: const Text('OK'),
                     ),
                   ],
                 ),
@@ -249,7 +111,7 @@ class _CareProviderScreenState extends State<CareProviderScreen> {
           ),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(56),
+          preferredSize: const Size.fromHeight(56),
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: 16.0,
@@ -266,10 +128,10 @@ class _CareProviderScreenState extends State<CareProviderScreen> {
                 ),
                 filled: true,
                 fillColor: Colors.white,
-                prefixIcon: Icon(Icons.search, color: Colors.grey),
+                prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
-                        icon: Icon(Icons.clear),
+                        icon: const Icon(Icons.clear),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -287,7 +149,7 @@ class _CareProviderScreenState extends State<CareProviderScreen> {
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Search Results',
                     style: TextStyle(
                       fontSize: 18,
@@ -295,243 +157,159 @@ class _CareProviderScreenState extends State<CareProviderScreen> {
                       color: Colors.black87,
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Expanded(
                     child: _isSearching
-                        ? Center(child: CircularProgressIndicator())
+                        ? const Center(child: CircularProgressIndicator())
                         : _filteredProviders.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.search_off,
-                                  size: 64,
-                                  color: Colors.grey,
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.search_off,
+                                      size: 64,
+                                      color: Colors.grey,
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'No healthcare providers found',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'Try searching with a different name',
+                                      style: TextStyle(color: Colors.grey[500]),
+                                    ),
+                                  ],
                                 ),
-                                SizedBox(height: 16),
-                                Text(
-                                  'No healthcare providers found',
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  'Try searching with a different name',
-                                  style: TextStyle(color: Colors.grey[500]),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.builder(
-                            itemCount: _filteredProviders.length,
-                            itemBuilder: (context, index) {
-                              final provider = _filteredProviders[index];
-                              return ProviderListTile(provider: provider);
-                            },
-                          ),
+                              )
+                            : ListView.builder(
+                                itemCount: _filteredProviders.length,
+                                itemBuilder: (context, index) {
+                                  final provider = _filteredProviders[index];
+                                  return ProviderListTile(provider: provider);
+                                },
+                              ),
                   ),
                 ],
               )
-            : Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.search, size: 80, color: Colors.grey[400]),
-                    SizedBox(height: 24),
-                    Text(
-                      'Find Healthcare Providers',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Shared Providers Section
+                  const Text(
+                    'Providers with Access to Your Data',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
                     ),
-                    SizedBox(height: 12),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0),
-                      child: Text(
-                        'Use the search bar above to find healthcare professionals by their name',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 16),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    SizedBox(height: 24),
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (_sharedProviders.isEmpty)
                     Container(
-                      padding: EdgeInsets.all(16),
-                      margin: EdgeInsets.symmetric(horizontal: 32),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.blue.shade50,
+                        color: Colors.grey.shade100,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.blue.shade200),
+                        border: Border.all(color: Colors.grey.shade300),
                       ),
                       child: Column(
                         children: [
                           Icon(
-                            Icons.lightbulb_outline,
-                            color: Colors.blue,
-                            size: 32,
+                            Icons.share,
+                            size: 48,
+                            color: Colors.grey[400],
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Tip',
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No Shared Providers',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.blue.shade700,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black87,
                             ),
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Text(
-                            'Search for doctors, nurses, or specialists who can help with your hemophilia care',
-                            style: TextStyle(color: Colors.blue.shade600),
+                            'You haven\'t shared your data with any healthcare providers yet.',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
                             textAlign: TextAlign.center,
                           ),
                         ],
                       ),
+                    )
+                  else
+                    Expanded(
+                      flex: 1,
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: _sharedProviders.length,
+                        itemBuilder: (context, index) {
+                          final provider = _sharedProviders[index];
+                          return SharedProviderTile(provider: provider);
+                        },
+                      ),
                     ),
-                  ],
-                ),
-              ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: "emergency_contact_fab", // Add unique heroTag
-        onPressed: () {
-          showModalBottomSheet(
-            context: context,
-            isScrollControlled: true,
-            builder: (BuildContext context) {
-              final uid = FirebaseAuth.instance.currentUser?.uid;
-              return Padding(
-                padding: EdgeInsets.only(
-                  bottom: MediaQuery.of(context).viewInsets.bottom,
-                ),
-                child: SafeArea(
-                  child: Container(
-                    padding: const EdgeInsets.all(24),
+
+                  const SizedBox(height: 24),
+
+                  // Search Instructions Section
+                  const Text(
+                    'Find New Providers',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade200),
+                    ),
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Text(
-                          'Emergency Contacts',
+                        const Icon(
+                          Icons.search,
+                          size: 48,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Search for Healthcare Providers',
                           style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 18,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Use the search bar above to find healthcare professionals by their name and connect with them for your hemophilia care.',
+                          style: TextStyle(
+                            color: Colors.blue.shade700,
+                            fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                        if (uid != null)
-                          StreamBuilder<QuerySnapshot>(
-                            stream: _firestoreService.getEmergencyContacts(uid),
-                            builder: (context, snapshot) {
-                              if (snapshot.hasError) {
-                                return Text(
-                                  'Error loading contacts',
-                                  style: TextStyle(color: Colors.red),
-                                );
-                              }
-                              if (snapshot.hasData &&
-                                  snapshot.data!.docs.isNotEmpty) {
-                                // Sort contacts on client side by creation time if available
-                                final contacts = snapshot.data!.docs.toList();
-                                contacts.sort((a, b) {
-                                  final dataA =
-                                      a.data() as Map<String, dynamic>;
-                                  final dataB =
-                                      b.data() as Map<String, dynamic>;
-                                  final timeA =
-                                      dataA['createdAt'] as Timestamp?;
-                                  final timeB =
-                                      dataB['createdAt'] as Timestamp?;
-                                  if (timeA != null && timeB != null) {
-                                    return timeB.compareTo(
-                                      timeA,
-                                    ); // Descending order
-                                  }
-                                  return 0;
-                                });
-
-                                return Column(
-                                  children: [
-                                    ...contacts.map((doc) {
-                                      final data =
-                                          doc.data() as Map<String, dynamic>;
-                                      return ListTile(
-                                        leading: Icon(
-                                          Icons.phone,
-                                          color: Colors.redAccent,
-                                        ),
-                                        title: Text(data['contactPhone'] ?? ''),
-                                        trailing: IconButton(
-                                          icon: Icon(
-                                            Icons.edit,
-                                            color: Colors.blue,
-                                          ),
-                                          onPressed: () =>
-                                              _editEmergencyContact(
-                                                doc.id,
-                                                data['contactPhone'] ?? '',
-                                              ),
-                                        ),
-                                        contentPadding: EdgeInsets.zero,
-                                      );
-                                    }),
-                                    Divider(),
-                                  ],
-                                );
-                              }
-                              return SizedBox.shrink();
-                            },
-                          ),
-                        TextField(
-                          controller: _emergencyContactController,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            hintText: 'Enter phone number',
-                            prefixIcon: Icon(
-                              Icons.phone,
-                              color: Colors.redAccent,
-                            ),
-                            border: UnderlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            padding: EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                          ),
-                          onPressed: _addEmergencyContact,
-                          child: Text(
-                            'Add Contact',
-                            style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 16,
-                            ),
-                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
-              );
-            },
-          );
-        },
-        icon: Icon(FontAwesomeIcons.circlePlus),
-        label: Text(
-          'Emergency Contact',
-          style: TextStyle(fontWeight: FontWeight.w500),
-        ),
-        backgroundColor: Colors.redAccent,
-        foregroundColor: Colors.white,
+                ],
+              ),
       ),
     );
   }
@@ -545,22 +323,80 @@ class ProviderListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
         title: Text(
           provider['name'] ?? 'Unknown Provider',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         subtitle: Text(
           provider['email'] ?? 'No email provided',
           style: TextStyle(color: Colors.grey[600]),
         ),
-        leading: CircleAvatar(
+        leading: const CircleAvatar(
           backgroundColor: Colors.redAccent,
           child: Icon(Icons.local_hospital, color: Colors.white),
         ),
-        trailing: Icon(Icons.arrow_forward_ios, color: Colors.redAccent),
+        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.redAccent),
         tileColor: Colors.grey.shade100,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        onTap: () {
+          Navigator.pushNamed(
+            context,
+            '/care_user_information',
+            arguments: provider,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class SharedProviderTile extends StatelessWidget {
+  final Map<String, dynamic> provider;
+
+  const SharedProviderTile({super.key, required this.provider});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        title: Text(
+          provider['name'] ?? 'Unknown Provider',
+          style: const TextStyle(fontWeight: FontWeight.w600),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              provider['email'] ?? 'No email provided',
+              style: TextStyle(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: Colors.green.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                'Data Shared',
+                style: TextStyle(
+                  color: Colors.green.shade700,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        leading: const CircleAvatar(
+          backgroundColor: Colors.green,
+          child: Icon(Icons.verified_user, color: Colors.white),
+        ),
+        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.green),
+        tileColor: Colors.green.shade50,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         onTap: () {
           Navigator.pushNamed(

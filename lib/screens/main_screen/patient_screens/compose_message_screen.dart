@@ -104,7 +104,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'New Message',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
@@ -112,7 +112,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
         foregroundColor: Colors.redAccent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.arrowLeft, size: 18),
+          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -121,7 +121,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
           // Header section
           Container(
             width: double.infinity,
-            padding: EdgeInsets.fromLTRB(24, 20, 24, 16),
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
             decoration: BoxDecoration(
               color: Colors.white,
               border: Border(
@@ -140,13 +140,13 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                         color: Colors.redAccent.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: Icon(
+                      child: const Icon(
                         FontAwesomeIcons.userDoctor,
                         color: Colors.redAccent,
                         size: 18,
                       ),
                     ),
-                    SizedBox(width: 16),
+                    const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +159,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                               color: Colors.grey.shade800,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'Message your authorized providers',
                             style: TextStyle(
@@ -172,9 +172,9 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(12),
@@ -187,7 +187,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                         color: Colors.blue.shade600,
                         size: 16,
                       ),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           'Only providers with active data sharing agreements are shown',
@@ -207,7 +207,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
 
           // Search Bar
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -217,7 +217,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                     color: Colors.grey.withOpacity(0.08),
                     spreadRadius: 1,
                     blurRadius: 6,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -228,7 +228,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                   hintText: 'Search providers by name or specialization...',
                   hintStyle: TextStyle(color: Colors.grey.shade500),
                   prefixIcon: Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     child: Icon(
                       FontAwesomeIcons.magnifyingGlass,
                       color: Colors.grey.shade500,
@@ -236,7 +236,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                     ),
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(
+                  contentPadding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 16,
                   ),
@@ -252,7 +252,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        SizedBox(
+                        const SizedBox(
                           width: 24,
                           height: 24,
                           child: CircularProgressIndicator(
@@ -260,7 +260,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                             strokeWidth: 2.5,
                           ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(
                           'Loading healthcare providers...',
                           style: TextStyle(
@@ -274,9 +274,9 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 : _filteredProviders.isEmpty
                 ? _buildEmptyState()
                 : ListView.separated(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
                     itemCount: _filteredProviders.length,
-                    separatorBuilder: (context, index) => SizedBox(height: 12),
+                    separatorBuilder: (context, index) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final provider = _filteredProviders[index];
                       return _buildProviderItem(provider);
@@ -296,7 +296,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
 
     return Center(
       child: Padding(
-        padding: EdgeInsets.all(32),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -319,7 +319,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 size: 32,
               ),
             ),
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
             Text(
               isSearchEmpty ? 'No providers found' : 'No authorized providers',
               style: TextStyle(
@@ -328,7 +328,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                 color: Colors.grey.shade700,
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               isSearchEmpty
                   ? 'Try adjusting your search criteria'
@@ -341,9 +341,9 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
               textAlign: TextAlign.center,
             ),
             if (!isSearchEmpty) ...[
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -356,7 +356,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                       color: Colors.blue.shade600,
                       size: 18,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         'Data sharing allows your healthcare provider to access your health data for better care coordination.',
@@ -369,14 +369,14 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Container(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton.icon(
                   onPressed: _navigateToAddCareProvider,
-                  icon: Icon(FontAwesomeIcons.userPlus, size: 16),
-                  label: Text(
+                  icon: const Icon(FontAwesomeIcons.userPlus, size: 16),
+                  label: const Text(
                     'Add Care Provider',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
@@ -402,7 +402,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
       onTap: () => _startChatWithProvider(provider),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -411,7 +411,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
               color: Colors.grey.withOpacity(0.08),
               spreadRadius: 1,
               blurRadius: 6,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -439,7 +439,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                       size: 24,
                     ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
 
             // Provider Info
             Expanded(
@@ -454,11 +454,11 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   if (provider['specialization'] != null &&
                       provider['specialization'].isNotEmpty)
                     Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         borderRadius: BorderRadius.circular(12),
@@ -474,7 +474,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
                     ),
                   if (provider['email'] != null &&
                       provider['email'].isNotEmpty) ...[
-                    SizedBox(height: 6),
+                    const SizedBox(height: 6),
                     Text(
                       provider['email'],
                       style: TextStyle(
@@ -489,12 +489,12 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
 
             // Message Button
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.redAccent,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Row(
+              child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(FontAwesomeIcons.message, color: Colors.white, size: 14),
@@ -520,7 +520,7 @@ class _ComposeMessageScreenState extends State<ComposeMessageScreen> {
     // Navigate to the care provider screen for provider search
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CareProviderScreen()),
+      MaterialPageRoute(builder: (context) => const CareProviderScreen()),
     ).then((_) {
       // Refresh the providers list when returning from the care provider screen
       _loadHealthcareProviders();

@@ -52,24 +52,29 @@ class _MessagesScreenState extends State<MessagesScreen> {
     print('Setting up conversation stream for user: $_currentUserId');
 
     _conversationSubscription?.cancel();
+
+    // Try the regular service first, fall back to simple service if it fails
     _conversationSubscription = _messageService
         .getConversationsStream(_currentUserId!)
-        .listen(
-          (conversations) {
-            print('Received ${conversations.length} conversations from stream');
-            setState(() {
-              _messages = conversations;
-              _filteredMessages = conversations;
-              _isLoading = false;
-            });
-          },
-          onError: (error) {
-            print('Error in conversation stream: $error');
-            setState(() {
-              _isLoading = false;
-            });
-          },
-        );
+        .handleError((error) {
+      print('Regular conversation stream failed: $error');
+      // Fall back to manual loading with simple service
+      _loadMessages();
+    }).listen(
+      (conversations) {
+        print('Received ${conversations.length} conversations from stream');
+        setState(() {
+          _messages = conversations;
+          _filteredMessages = conversations;
+          _isLoading = false;
+        });
+      },
+      onError: (error) {
+        print('Error in conversation stream: $error');
+        // Use simple service as fallback
+        _loadMessages();
+      },
+    );
   }
 
   Future<void> _loadMessages() async {
@@ -80,7 +85,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         _isLoading = true;
       });
 
-      // Get conversations for the current user
+      // Now that Firebase indexes are created, use the regular message service
       final conversations = await _messageService.getConversations(
         _currentUserId!,
       );
@@ -115,12 +120,10 @@ class _MessagesScreenState extends State<MessagesScreen> {
         _filteredMessages = _messages.where((conversation) {
           final otherUser = conversation['otherUser'];
           final senderName = (otherUser['name'] ?? '').toString().toLowerCase();
-          final lastMessage = (conversation['lastMessage'] ?? '')
-              .toString()
-              .toLowerCase();
-          final specialization = (otherUser['specialization'] ?? '')
-              .toString()
-              .toLowerCase();
+          final lastMessage =
+              (conversation['lastMessage'] ?? '').toString().toLowerCase();
+          final specialization =
+              (otherUser['specialization'] ?? '').toString().toLowerCase();
           return senderName.contains(query.toLowerCase()) ||
               lastMessage.contains(query.toLowerCase()) ||
               specialization.contains(query.toLowerCase());
@@ -172,7 +175,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       appBar: AppBar(
         title: Column(
           children: [
-            Text('Messages', style: TextStyle(fontWeight: FontWeight.w600)),
+            const Text('Messages', style: TextStyle(fontWeight: FontWeight.w600)),
             if (unreadCount > 0)
               Text(
                 '$unreadCount unread',
@@ -184,12 +187,22 @@ class _MessagesScreenState extends State<MessagesScreen> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.redAccent,
+        actions: [
+          // Refresh button
+          IconButton(
+            onPressed: () {
+              _loadMessages();
+            },
+            icon: const Icon(Icons.refresh, size: 20),
+            tooltip: 'Refresh Messages',
+          ),
+        ],
       ),
       body: Column(
         children: [
           // Search Bar
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             color: Colors.grey.shade50,
             child: Container(
               decoration: BoxDecoration(
@@ -209,7 +222,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     size: 18,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
             ),
@@ -222,8 +235,8 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: Colors.redAccent),
-                        SizedBox(height: 16),
+                        const CircularProgressIndicator(color: Colors.redAccent),
+                        const SizedBox(height: 16),
                         Text(
                           'Loading messages...',
                           style: TextStyle(
@@ -235,29 +248,29 @@ class _MessagesScreenState extends State<MessagesScreen> {
                     ),
                   )
                 : _filteredMessages.isEmpty
-                ? RefreshIndicator(
-                    color: Colors.redAccent,
-                    onRefresh: _loadMessages,
-                    child: SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
-                      child: SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.6,
-                        child: _buildEmptyState(),
+                    ? RefreshIndicator(
+                        color: Colors.redAccent,
+                        onRefresh: _loadMessages,
+                        child: SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.6,
+                            child: _buildEmptyState(),
+                          ),
+                        ),
+                      )
+                    : RefreshIndicator(
+                        color: Colors.redAccent,
+                        onRefresh: _loadMessages,
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: _filteredMessages.length,
+                          itemBuilder: (context, index) {
+                            final conversation = _filteredMessages[index];
+                            return _buildMessageTile(conversation);
+                          },
+                        ),
                       ),
-                    ),
-                  )
-                : RefreshIndicator(
-                    color: Colors.redAccent,
-                    onRefresh: _loadMessages,
-                    child: ListView.builder(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      itemCount: _filteredMessages.length,
-                      itemBuilder: (context, index) {
-                        final conversation = _filteredMessages[index];
-                        return _buildMessageTile(conversation);
-                      },
-                    ),
-                  ),
           ),
         ],
       ),
@@ -265,11 +278,11 @@ class _MessagesScreenState extends State<MessagesScreen> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => ComposeMessageScreen()),
+            MaterialPageRoute(builder: (context) => const ComposeMessageScreen()),
           );
         },
         backgroundColor: Colors.redAccent,
-        child: Icon(FontAwesomeIcons.plus, color: Colors.white),
+        child: const Icon(FontAwesomeIcons.plus, color: Colors.white),
       ),
     );
   }
@@ -292,7 +305,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               size: 32,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
             'No messages yet',
             style: TextStyle(
@@ -301,26 +314,26 @@ class _MessagesScreenState extends State<MessagesScreen> {
               color: Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Start a conversation with your healthcare provider',
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
             textAlign: TextAlign.center,
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           ElevatedButton.icon(
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => ComposeMessageScreen()),
+                MaterialPageRoute(builder: (context) => const ComposeMessageScreen()),
               );
             },
-            icon: Icon(FontAwesomeIcons.plus, size: 16),
-            label: Text('New Message'),
+            icon: const Icon(FontAwesomeIcons.plus, size: 16),
+            label: const Text('New Message'),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(25),
               ),
@@ -336,7 +349,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
     final isUnread = !conversation['isLastMessageRead'];
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: isUnread ? Colors.red.shade50 : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -345,7 +358,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         ),
       ),
       child: ListTile(
-        contentPadding: EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(16),
         leading: Stack(
           children: [
             CircleAvatar(
@@ -405,7 +418,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               otherUser['specialization'] ??
                   otherUser['role'] ??
@@ -416,7 +429,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
               conversation['lastMessage'] ?? 'No messages yet',
               style: TextStyle(

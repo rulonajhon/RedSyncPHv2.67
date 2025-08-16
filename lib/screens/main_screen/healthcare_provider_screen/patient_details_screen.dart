@@ -43,7 +43,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
       appBar: AppBar(
         title: Text(
           widget.patientData['name'] ?? 'Patient Details',
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.white,
         foregroundColor: Colors.redAccent,
@@ -53,7 +53,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
             onPressed: () {
               _showPatientActionsMenu();
             },
-            icon: Icon(FontAwesomeIcons.ellipsisVertical, size: 18),
+            icon: const Icon(FontAwesomeIcons.ellipsisVertical, size: 18),
           ),
         ],
       ),
@@ -76,9 +76,9 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               labelColor: Colors.redAccent,
               unselectedLabelColor: Colors.grey.shade600,
               indicatorWeight: 3,
-              labelStyle: TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
-              unselectedLabelStyle: TextStyle(fontWeight: FontWeight.w500),
-              tabs: [
+              labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+              unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+              tabs: const [
                 Tab(text: 'Overview'),
                 Tab(text: 'History'),
                 Tab(text: 'Logs'),
@@ -103,9 +103,10 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   }
 
   Widget _buildPatientHeader() {
+    final isCaregiver = widget.patientData['role'] == 'caregiver';
+    
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -113,219 +114,241 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
           colors: [Colors.redAccent, Colors.red.shade700],
         ),
       ),
-      child: Column(
-        children: [
-          Row(
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+          child: Column(
             children: [
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Center(
-                  child: Text(
-                    (widget.patientData['name'] ?? 'P')[0].toUpperCase(),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
+              Row(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        (widget.patientData['name'] ?? 'P')[0].toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      widget.patientData['name'] ?? 'Unknown Patient',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
+                  const SizedBox(width: 20),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.patientData['name'] ?? 'Unknown User',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            isCaregiver ? 'Caregiver' : 'Patient',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.patientData['email'] ?? 'No email',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.85),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: IconButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ChatScreen(
+                              participant: {
+                                'id': widget.patientUid,
+                                'name': widget.patientData['name'],
+                                'role': isCaregiver ? 'caregiver' : 'patient',
+                                'profilePicture':
+                                    widget.patientData['profilePicture'],
+                              },
+                              currentUserRole: 'medical',
+                            ),
+                          ),
+                        );
+                      },
+                      icon: const Icon(
+                        FontAwesomeIcons.message,
                         color: Colors.white,
+                        size: 18,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      widget.patientData['email'] ?? 'No email',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.9),
-                        fontSize: 14,
-                      ),
+                  ),
+                ],
+              ),
+              if (!isCaregiver) ...[
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    _buildHeaderStat(
+                      'Hemophilia Type',
+                      widget.patientData['hemophiliaType'] ?? 'Hemophilia A',
+                    ),
+                    _buildHeaderStat('Age', _calculateAge(widget.patientData['dob'])),
+                    _buildHeaderStat(
+                      'Blood Type',
+                      widget.patientData['bloodType'] ?? 'Not specified',
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatScreen(
-                        participant: {
-                          'id': widget.patientUid,
-                          'name': widget.patientData['name'],
-                          'role': 'patient',
-                          'profilePicture':
-                              widget.patientData['profilePicture'],
-                        },
-                        currentUserRole: 'medical',
-                      ),
-                    ),
-                  );
-                },
-                icon: Container(
-                  padding: EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    FontAwesomeIcons.message,
-                    color: Colors.white,
-                    size: 16,
-                  ),
-                ),
-              ),
+              ],
             ],
           ),
-          SizedBox(height: 16),
-          Row(
-            children: [
-              _buildHeaderStat(
-                'Type',
-                widget.patientData['hemophiliaType'] ?? 'Hemophilia A',
-              ),
-              SizedBox(width: 20),
-              _buildHeaderStat('Age', _calculateAge(widget.patientData['dob'])),
-              SizedBox(width: 20),
-              _buildHeaderStat(
-                'Blood Type',
-                widget.patientData['bloodType'] ?? 'Not specified',
-              ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _buildHeaderStat(String label, String value) {
     return Expanded(
-      child: Column(
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withOpacity(0.8),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
           ),
-          SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildOverviewTab() {
+    final isCaregiver = widget.patientData['role'] == 'caregiver';
+    
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle('Personal Information'),
-          SizedBox(height: 16),
-          _buildInfoGrid([
-            _buildInfoItem(
-              'Full Name',
-              widget.patientData['name'] ?? 'Not specified',
-            ),
-            _buildInfoItem(
-              'Email',
-              widget.patientData['email'] ?? 'Not specified',
-            ),
-            _buildInfoItem(
-              'Gender',
-              widget.patientData['gender'] ?? 'Not specified',
-            ),
-            _buildInfoItem(
-              'Date of Birth',
-              _formatDate(widget.patientData['dob']),
-            ),
-            _buildInfoItem(
-              'Weight',
-              _formatWeight(widget.patientData['weight']),
-            ),
-            _buildInfoItem(
-              'Blood Type',
-              widget.patientData['bloodType'] ?? 'Not specified',
-            ),
+          const SizedBox(height: 20),
+          _buildInfoList([
+            _buildInfoRow('Full Name', widget.patientData['name'] ?? 'Not specified'),
+            _buildInfoRow('Email', widget.patientData['email'] ?? 'Not specified'),
+            _buildInfoRow('Gender', widget.patientData['gender'] ?? 'Not specified'),
+            _buildInfoRow('Date of Birth', _formatDate(widget.patientData['dob'])),
+            if (!isCaregiver) ...[
+              _buildInfoRow('Weight', _formatWeight(widget.patientData['weight'])),
+              _buildInfoRow('Blood Type', widget.patientData['bloodType'] ?? 'Not specified'),
+            ],
+            if (isCaregiver) ...[
+              _buildInfoRow('Relationship to Patient', widget.patientData['relationship'] ?? 'Not specified'),
+            ],
           ]),
 
-          SizedBox(height: 32),
+          // Show Medical Information and Emergency Contact only for non-caregivers
+          if (!isCaregiver) ...[
+            const SizedBox(height: 40),
+            _buildSectionTitle('Medical Information'),
+            const SizedBox(height: 20),
+            _buildInfoList([
+              _buildInfoRow('Hemophilia Type', widget.patientData['hemophiliaType'] ?? 'Hemophilia A'),
+              _buildInfoRow('Inhibitor Status', widget.patientData['inhibitorStatus'] ?? 'Not specified'),
+            ]),
 
-          _buildSectionTitle('Medical Information'),
-          SizedBox(height: 16),
-          _buildInfoGrid([
-            _buildInfoItem(
-              'Hemophilia Type',
-              widget.patientData['hemophiliaType'] ?? 'Hemophilia A',
+            const SizedBox(height: 40),
+            _buildSectionTitle('Emergency Contact'),
+            const SizedBox(height: 20),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance
+                  .collection('emergency_contacts')
+                  .where('patientUid', isEqualTo: widget.patientUid)
+                  .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
+                  final contact = snapshot.data!.docs.first.data() as Map<String, dynamic>;
+                  return _buildInfoList([
+                    _buildInfoRow('Emergency Phone', contact['contactPhone'] ?? 'Not specified'),
+                    _buildInfoRow('Contact Name', contact['contactName'] ?? 'Not specified'),
+                    _buildInfoRow('Relationship', contact['relationship'] ?? 'Not specified'),
+                  ]);
+                }
+                return _buildEmptyState(
+                  icon: FontAwesomeIcons.phoneSlash,
+                  title: 'No emergency contact',
+                  subtitle: 'Patient hasn\'t provided emergency contact information',
+                );
+              },
             ),
-            _buildInfoItem(
-              'Inhibitor Status',
-              widget.patientData['inhibitorStatus'] ?? 'Not specified',
-            ),
-          ]),
+          ],
 
-          SizedBox(height: 32),
-
-          _buildSectionTitle('Emergency Contact'),
-          SizedBox(height: 16),
-          StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('emergency_contacts')
-                .where('patientUid', isEqualTo: widget.patientUid)
-                .snapshots(),
-            builder: (context, snapshot) {
-              if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
-                final contact =
-                    snapshot.data!.docs.first.data() as Map<String, dynamic>;
-                return _buildInfoGrid([
-                  _buildInfoItem(
-                    'Emergency Phone',
-                    contact['contactPhone'] ?? 'Not specified',
-                  ),
-                  _buildInfoItem(
-                    'Contact Name',
-                    contact['contactName'] ?? 'Not specified',
-                  ),
-                  _buildInfoItem(
-                    'Relationship',
-                    contact['relationship'] ?? 'Not specified',
-                  ),
-                ]);
-              }
-              return _buildEmptyState(
-                icon: FontAwesomeIcons.phoneSlash,
-                title: 'No emergency contact',
-                subtitle:
-                    'Patient hasn\'t provided emergency contact information',
-              );
-            },
-          ),
+          // Show Patient Information only for caregivers
+          if (isCaregiver) ...[
+            const SizedBox(height: 40),
+            _buildSectionTitle('Patient Information'),
+            const SizedBox(height: 20),
+            _buildCaregiverPatientInfo(),
+          ],
         ],
       ),
     );
@@ -333,12 +356,12 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
   Widget _buildMedicalHistoryTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle('Recent Treatments'),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           StreamBuilder<QuerySnapshot>(
             stream: FirebaseFirestore.instance
                 .collection('infusions')
@@ -369,98 +392,111 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
   Widget _buildLogsTab() {
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildSectionTitle('Bleeding Episodes'),
-            SizedBox(height: 16),
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: _firestoreService.getBleedLogs(
-                widget.patientUid,
-                limit: 15,
-              ),
-              builder: (context, snapshot) {
-                if (snapshot.hasData && snapshot.data!.isNotEmpty) {
-                  final logs = snapshot.data!;
-                  return Column(
-                    children: logs
-                        .map((log) => _buildBleedLogItem(log))
-                        .toList(),
-                  );
-                }
-                return _buildEmptyState(
-                  icon: FontAwesomeIcons.droplet,
-                  title: 'No bleeding episodes',
-                  subtitle: 'Patient hasn\'t logged any bleeding episodes yet',
-                );
-              },
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('Bleeding Episodes'),
+          const SizedBox(height: 16),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _firestoreService.getBleedLogs(
+              widget.patientUid,
+              limit: 15,
             ),
-          ],
-        ),
+            builder: (context, snapshot) {
+              if (snapshot.hasData && snapshot.data!.isNotEmpty) {
+                final logs = snapshot.data!;
+                return Column(
+                  children: logs.map((log) => _buildBleedLogItem(log)).toList(),
+                );
+              }
+              return _buildEmptyState(
+                icon: FontAwesomeIcons.droplet,
+                title: 'No bleeding episodes',
+                subtitle: 'Patient hasn\'t logged any bleeding episodes yet',
+              );
+            },
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Colors.black87,
-      ),
-    );
-  }
-
-  Widget _buildInfoGrid(List<Widget> items) {
-    return Column(
+    return Row(
       children: [
-        for (int i = 0; i < items.length; i += 2)
-          Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Row(
-              children: [
-                Expanded(child: items[i]),
-                if (i + 1 < items.length) ...[
-                  SizedBox(width: 16),
-                  Expanded(child: items[i + 1]),
-                ] else
-                  Expanded(child: SizedBox()),
-              ],
-            ),
+        Container(
+          width: 4,
+          height: 24,
+          decoration: BoxDecoration(
+            color: Colors.redAccent,
+            borderRadius: BorderRadius.circular(2),
           ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.black87,
+            letterSpacing: -0.5,
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildInfoItem(String label, String value) {
+  Widget _buildInfoList(List<Widget> items) {
+    return Column(
+      children: items.map((item) => Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: item,
+      )).toList(),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade200),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey.shade100),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.shade50,
+            offset: const Offset(0, 2),
+            blurRadius: 8,
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey.shade600,
-              fontWeight: FontWeight.w500,
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.right,
             ),
           ),
         ],
@@ -470,8 +506,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
   Widget _buildTreatmentItem(Map<String, dynamic> data) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -486,29 +522,29 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               color: Colors.purple.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
+            child: const Icon(
               FontAwesomeIcons.syringe,
               color: Colors.purple,
               size: 16,
             ),
           ),
-          SizedBox(width: 16),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   data['medication'] ?? 'Unknown medication',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 15,
                     color: Colors.black87,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   '${data['doseIU'] ?? 0} IU',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.purple,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
@@ -535,8 +571,8 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
     final color = _getSeverityColor(severity);
 
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
@@ -556,7 +592,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               ),
               child: Icon(FontAwesomeIcons.droplet, color: color, size: 16),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,7 +602,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                       Expanded(
                         child: Text(
                           log['bodyRegion'] ?? 'Unknown',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                             color: Colors.black87,
@@ -574,7 +610,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                         ),
                       ),
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
@@ -593,7 +629,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                       ),
                     ],
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Row(
                     children: [
                       Text(
@@ -603,7 +639,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                           fontSize: 13,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       Icon(
                         FontAwesomeIcons.chevronRight,
                         color: Colors.grey.shade400,
@@ -627,7 +663,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   }) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(40),
+      padding: const EdgeInsets.all(40),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -636,7 +672,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
       child: Column(
         children: [
           Icon(icon, size: 48, color: Colors.grey.shade400),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Text(
             title,
             style: TextStyle(
@@ -645,7 +681,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               color: Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             subtitle,
             style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
@@ -661,7 +697,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
       context: context,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        margin: EdgeInsets.all(16),
+        margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -669,7 +705,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
+            const Padding(
               padding: EdgeInsets.all(20),
               child: Text(
                 'Patient Actions',
@@ -712,7 +748,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               },
               isDestructive: true,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -761,15 +797,15 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Remove Data Access'),
-        content: Text(
+        title: const Text('Remove Data Access'),
+        content: const Text(
           'Are you sure you want to revoke data sharing access for this patient? This action cannot be undone.',
         ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -777,7 +813,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
               await _removeDataAccess();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Remove', style: TextStyle(color: Colors.white)),
+            child: const Text('Remove', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -808,7 +844,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
       // Show success message and navigate back
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Data access removed successfully'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -837,214 +873,213 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
         minChildSize: 0.5,
         maxChildSize: 0.95,
         builder: (context, scrollController) {
-          return SafeArea(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              ),
-              child: Column(
-                children: [
-                  // Header
-                  Container(
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: _getSeverityColor(log['severity'] ?? 'Mild'),
-                      borderRadius: BorderRadius.vertical(
-                        top: Radius.circular(20),
-                      ),
+          return Container(
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: _getSeverityColor(log['severity'] ?? 'Mild'),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(20),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            FontAwesomeIcons.droplet,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Bleeding Episode',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                        child: const Icon(
+                          FontAwesomeIcons.droplet,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Bleeding Episode',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              '${log['date'] ?? 'Unknown'} at ${log['time'] ?? 'Unknown'}',
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDetailSection('Episode Information', [
+                          _buildDetailRow(
+                            'Body Region',
+                            log['bodyRegion'] ?? 'Not specified',
+                          ),
+                          _buildDetailRow(
+                            'Specific Region',
+                            log['specificRegion']?.isNotEmpty == true
+                                ? log['specificRegion']
+                                : 'Not specified',
+                          ),
+                          _buildDetailRow(
+                            'Severity',
+                            log['severity'] ?? 'Not specified',
+                          ),
+                          _buildDetailRow(
+                            'Date',
+                            log['date'] ?? 'Not specified',
+                          ),
+                          _buildDetailRow(
+                            'Time',
+                            log['time'] ?? 'Not specified',
+                          ),
+                        ]),
+
+                        const SizedBox(height: 24),
+
+                        if (log['notes']?.isNotEmpty == true) ...[
+                          _buildDetailSection('Additional Notes', [
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade50,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.shade200),
+                              ),
+                              child: Text(
+                                log['notes'],
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.black87,
+                                  height: 1.5,
                                 ),
                               ),
-                              Text(
-                                '${log['date'] ?? 'Unknown'} at ${log['time'] ?? 'Unknown'}',
-                                style: TextStyle(
-                                  color: Colors.white.withOpacity(0.9),
-                                  fontSize: 14,
+                            ),
+                          ]),
+                          const SizedBox(height: 24),
+                        ],
+
+                        _buildDetailSection('Patient Information', [
+                          _buildDetailRow(
+                            'Patient Name',
+                            widget.patientData['name'] ?? 'Unknown',
+                          ),
+                          _buildDetailRow(
+                            'Hemophilia Type',
+                            widget.patientData['hemophiliaType'] ??
+                                'Not specified',
+                          ),
+                          _buildDetailRow(
+                            'Severity Level',
+                            widget.patientData['severity'] ?? 'Not specified',
+                          ),
+                        ]),
+
+                        const SizedBox(height: 24),
+
+                        if (log['createdAt'] != null) ...[
+                          _buildDetailSection('Log Information', [
+                            _buildDetailRow(
+                              'Logged At',
+                              _formatTimestamp(log['createdAt']),
+                            ),
+                            _buildDetailRow('Log ID', log['id'] ?? 'Unknown'),
+                          ]),
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Severity indicator
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: _getSeverityColor(
+                              log['severity'] ?? 'Mild',
+                            ).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: _getSeverityColor(
+                                log['severity'] ?? 'Mild',
+                              ).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                _getSeverityIcon(log['severity'] ?? 'Mild'),
+                                color: _getSeverityColor(
+                                  log['severity'] ?? 'Mild',
+                                ),
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      '${log['severity'] ?? 'Mild'} Severity',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: _getSeverityColor(
+                                          log['severity'] ?? 'Mild',
+                                        ),
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Text(
+                                      _getSeverityDescription(
+                                        log['severity'] ?? 'Mild',
+                                      ),
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: Icon(Icons.close, color: Colors.white),
-                        ),
                       ],
                     ),
                   ),
-
-                  // Content
-                  Expanded(
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      padding: EdgeInsets.all(20),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          _buildDetailSection('Episode Information', [
-                            _buildDetailRow(
-                              'Body Region',
-                              log['bodyRegion'] ?? 'Not specified',
-                            ),
-                            _buildDetailRow(
-                              'Specific Region',
-                              log['specificRegion']?.isNotEmpty == true
-                                  ? log['specificRegion']
-                                  : 'Not specified',
-                            ),
-                            _buildDetailRow(
-                              'Severity',
-                              log['severity'] ?? 'Not specified',
-                            ),
-                            _buildDetailRow(
-                              'Date',
-                              log['date'] ?? 'Not specified',
-                            ),
-                            _buildDetailRow(
-                              'Time',
-                              log['time'] ?? 'Not specified',
-                            ),
-                          ]),
-
-                          SizedBox(height: 24),
-
-                          if (log['notes']?.isNotEmpty == true) ...[
-                            _buildDetailSection('Additional Notes', [
-                              Container(
-                                width: double.infinity,
-                                padding: EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade50,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: Colors.grey.shade200,
-                                  ),
-                                ),
-                                child: Text(
-                                  log['notes'],
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.black87,
-                                    height: 1.5,
-                                  ),
-                                ),
-                              ),
-                            ]),
-                            SizedBox(height: 24),
-                          ],
-
-                          _buildDetailSection('Patient Information', [
-                            _buildDetailRow(
-                              'Patient Name',
-                              widget.patientData['name'] ?? 'Unknown',
-                            ),
-                            _buildDetailRow(
-                              'Hemophilia Type',
-                              widget.patientData['hemophiliaType'] ??
-                                  'Not specified',
-                            ),
-                          ]),
-
-                          SizedBox(height: 24),
-
-                          if (log['createdAt'] != null) ...[
-                            _buildDetailSection('Log Information', [
-                              _buildDetailRow(
-                                'Logged At',
-                                _formatTimestamp(log['createdAt']),
-                              ),
-                              _buildDetailRow('Log ID', log['id'] ?? 'Unknown'),
-                            ]),
-                            SizedBox(height: 24),
-                          ],
-
-                          // Severity indicator
-                          Container(
-                            width: double.infinity,
-                            padding: EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: _getSeverityColor(
-                                log['severity'] ?? 'Mild',
-                              ).withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: _getSeverityColor(
-                                  log['severity'] ?? 'Mild',
-                                ).withOpacity(0.3),
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  _getSeverityIcon(log['severity'] ?? 'Mild'),
-                                  color: _getSeverityColor(
-                                    log['severity'] ?? 'Mild',
-                                  ),
-                                  size: 24,
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        '${log['severity'] ?? 'Mild'} Severity',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: _getSeverityColor(
-                                            log['severity'] ?? 'Mild',
-                                          ),
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                      Text(
-                                        _getSeverityDescription(
-                                          log['severity'] ?? 'Mild',
-                                        ),
-                                        style: TextStyle(
-                                          color: Colors.grey.shade600,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           );
         },
@@ -1058,16 +1093,16 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: Colors.black87,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Container(
           width: double.infinity,
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
@@ -1077,7 +1112,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
                 color: Colors.grey.withOpacity(0.1),
                 spreadRadius: 1,
                 blurRadius: 3,
-                offset: Offset(0, 1),
+                offset: const Offset(0, 1),
               ),
             ],
           ),
@@ -1092,7 +1127,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
 
   Widget _buildDetailRow(String label, String value) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1111,7 +1146,7 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
             flex: 3,
             child: Text(
               value,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -1210,5 +1245,160 @@ class _PatientDetailsScreenState extends State<PatientDetailsScreen>
   String _formatWeight(String? weight) {
     if (weight == null || weight.isEmpty) return 'Not specified';
     return '$weight kg';
+  }
+
+  Widget _buildCaregiverPatientInfo() {
+    final patientData = widget.patientData;
+    
+    // Get patient information from caregiver data
+    final patientName = patientData['patientName'] ?? 'Not specified';
+    final patientAge = patientData['patientAge'] ?? 'Not specified';
+    final patientGender = patientData['patientGender'] ?? 'Not specified';
+    final patientHemophiliaType = patientData['patientHemophiliaType'] ?? 'Not specified';
+    final patientWeight = patientData['patientWeight'] ?? 'Not specified';
+    final patientBloodType = patientData['patientBloodType'] ?? 'Not specified';
+    final patientDob = _formatDate(patientData['patientDob']);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.blue.shade50,
+            Colors.indigo.shade50,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.shade100, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.shade100.withOpacity(0.3),
+            offset: const Offset(0, 4),
+            blurRadius: 12,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade600,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.blue.shade600.withOpacity(0.3),
+                      offset: const Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.child_care,
+                  color: Colors.white,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Text(
+                'Patient Under Care',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                  letterSpacing: -0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          _buildInfoList([
+            _buildPatientInfoRow('Patient Name', patientName),
+            _buildPatientInfoRow('Age', patientAge),
+            _buildPatientInfoRow('Gender', patientGender),
+            _buildPatientInfoRow('Date of Birth', patientDob),
+            _buildPatientInfoRow('Hemophilia Type', patientHemophiliaType),
+            _buildPatientInfoRow('Weight', patientWeight == 'Not specified' ? patientWeight : '$patientWeight kg'),
+            _buildPatientInfoRow('Blood Type', patientBloodType),
+          ]),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.blue.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Colors.blue.shade700,
+                  size: 18,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'This information is provided by the caregiver and may need verification.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.blue.shade700,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPatientInfoRow(String label, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.7),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blue.shade100),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.blue.shade700,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            flex: 3,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

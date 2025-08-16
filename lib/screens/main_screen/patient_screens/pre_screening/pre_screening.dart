@@ -234,7 +234,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
   void _nextPage() {
     if (_currentPage < _questions.length) {
       _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
@@ -243,7 +243,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
   void _previousPage() {
     if (_currentPage > 0) {
       _pageController.previousPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
@@ -329,12 +329,12 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         contentPadding: EdgeInsets.zero,
         title: Padding(
-          padding: EdgeInsets.all(16),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Icon(Icons.assessment, color: resultColor, size: 24),
-              SizedBox(width: 12),
-              Expanded(
+              const SizedBox(width: 12),
+              const Expanded(
                 child: Text('ISTH-BAT Results', style: TextStyle(fontSize: 18)),
               ),
             ],
@@ -346,13 +346,13 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.7,
           ),
           child: SingleChildScrollView(
-            padding: EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  padding: EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: resultColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -371,7 +371,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                             color: resultColor,
                           ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
                           'Score: $_totalScore/56',
                           style: TextStyle(
@@ -379,7 +379,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                             color: resultColor,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           thresholdInfo,
                           style: TextStyle(
@@ -392,16 +392,16 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 16),
-                Text(
+                const SizedBox(height: 16),
+                const Text(
                   'Recommendation:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                SizedBox(height: 8),
-                Text(recommendation, style: TextStyle(height: 1.4)),
-                SizedBox(height: 16),
+                const SizedBox(height: 8),
+                Text(recommendation, style: const TextStyle(height: 1.4)),
+                const SizedBox(height: 16),
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.blue.shade50,
                     borderRadius: BorderRadius.circular(8),
@@ -416,7 +416,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                           color: Colors.blue.shade700,
                         ),
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         'The International Society on Thrombosis and Haemostasis Bleeding Assessment Tool (ISTH-BAT) is a standardized questionnaire used to evaluate bleeding symptoms. This is a screening tool only and not a diagnostic test.',
                         style: TextStyle(
@@ -428,7 +428,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
               ],
             ),
           ),
@@ -439,7 +439,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
               Navigator.of(context).pop();
               Navigator.of(context).pop();
             },
-            child: Text('Finish'),
+            child: const Text('Finish'),
           ),
           if (_totalScore >= abnormalThreshold)
             ElevatedButton(
@@ -451,7 +451,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                 backgroundColor: Colors.redAccent,
                 foregroundColor: Colors.white,
               ),
-              child: Text('Create Account'),
+              child: const Text('Create Account'),
             ),
         ],
       ),
@@ -463,7 +463,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'ISTH-BAT Screening',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -477,10 +477,10 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
             // Progress Header
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: Colors.blue.shade700,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
                 ),
@@ -494,11 +494,11 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                       fontSize: 14,
                     ),
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   LinearProgressIndicator(
                     value: (_currentPage + 1) / _questions.length,
                     backgroundColor: Colors.white.withOpacity(0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ],
               ),
@@ -519,7 +519,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
 
             // Navigation Buttons
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   if (_currentPage > 0)
@@ -529,15 +529,15 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey.shade300,
                           foregroundColor: Colors.grey.shade700,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text('Previous'),
+                        child: const Text('Previous'),
                       ),
                     ),
-                  if (_currentPage > 0) SizedBox(width: 16),
+                  if (_currentPage > 0) const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
                       onPressed:
@@ -549,7 +549,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue.shade700,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -577,12 +577,12 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
     bool showGenderNote = isGenderSpecific && selectedGender != null;
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
@@ -594,7 +594,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade100,
                         borderRadius: BorderRadius.circular(8),
@@ -605,11 +605,11 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                         size: 20,
                       ),
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         question['title'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -618,19 +618,19 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
                   question['question'],
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 16,
                     color: Colors.black87,
                     height: 1.4,
                   ),
                 ),
                 if (showGenderNote && selectedGender == 'Male') ...[
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Container(
-                    padding: EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: Colors.blue.shade50,
                       borderRadius: BorderRadius.circular(8),
@@ -643,7 +643,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                           color: Colors.blue.shade700,
                           size: 16,
                         ),
-                        SizedBox(width: 8),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'This question is automatically set to N/A for males.',
@@ -658,7 +658,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                     ),
                   ),
                 ],
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 _buildAnswerOptions(question),
               ],
             ),
@@ -686,12 +686,12 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
         children: options.map<Widget>((option) {
           final isSelected = _answers[question['id']] == option;
           return Container(
-            margin: EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 12),
             child: InkWell(
               onTap: () =>
                   _selectAnswer(question['id'], option, option['score']),
               child: Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -712,7 +712,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                           ? Colors.blue.shade700
                           : Colors.grey.shade500,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         option['text'],
@@ -740,7 +740,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
         children: question['options'].map<Widget>((option) {
           final isSelected = selectedOptions.contains(option);
           return Container(
-            margin: EdgeInsets.only(bottom: 12),
+            margin: const EdgeInsets.only(bottom: 12),
             child: InkWell(
               onTap: () {
                 List newSelection = List.from(selectedOptions);
@@ -759,7 +759,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                 _selectAnswer(question['id'], newSelection, 0);
               },
               child: Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: isSelected ? Colors.blue.shade50 : Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -780,7 +780,7 @@ class _PreScreeningScreenState extends State<PreScreeningScreen> {
                           ? Colors.blue.shade700
                           : Colors.grey.shade500,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         option['text'],

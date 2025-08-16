@@ -87,7 +87,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
       // Show error to user
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content: Text('Failed to load profile. Using default settings.'),
             backgroundColor: Colors.orange,
           ),
@@ -114,8 +114,8 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
             }
             if (settings['defaultTargetLevel'] != null &&
                 factorLevelController.text.isEmpty) {
-              factorLevelController.text = settings['defaultTargetLevel']
-                  .toString();
+              factorLevelController.text =
+                  settings['defaultTargetLevel'].toString();
             }
             autoSaveCalculations = settings['autoSaveCalculations'] ?? true;
           }
@@ -197,7 +197,6 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           weight: weight,
           targetFactorLevel: factorLevel,
           calculatedDosage: dosage,
-          notes: notesController.text.trim(),
         );
 
         // Refresh calculation history
@@ -205,7 +204,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
@@ -241,7 +240,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Dosage Calculator',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -252,7 +251,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           if (calculationHistory.isNotEmpty)
             IconButton(
               onPressed: _showCalculationHistory,
-              icon: Icon(Icons.history),
+              icon: const Icon(Icons.history),
               tooltip: 'View History',
             ),
         ],
@@ -262,8 +261,8 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           // Header Section
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
+            padding: const EdgeInsets.all(20),
+            decoration: const BoxDecoration(
               color: Colors.green,
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(24),
@@ -273,23 +272,23 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
             child: Row(
               children: [
                 Container(
-                  padding: EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     FontAwesomeIcons.calculator,
                     color: Colors.white,
                     size: 24,
                   ),
                 ),
-                SizedBox(width: 16),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Factor Dosage Calculator',
                         style: TextStyle(
                           fontSize: 20,
@@ -314,14 +313,14 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           // Content Section
           Expanded(
             child: isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-                    padding: EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
                         // Result Display Section
                         _buildResultContainer(),
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
                         // Simple Parameters Section
                         Row(
@@ -335,7 +334,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                                 helperText: 'Body weight in kilograms',
                               ),
                             ),
-                            SizedBox(width: 16),
+                            const SizedBox(width: 16),
                             Expanded(
                               child: _buildInputField(
                                 controller: factorLevelController,
@@ -347,18 +346,14 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                             ),
                           ],
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildHemophiliaTypeSelector(),
 
-                        SizedBox(height: 16),
-                        // Notes field
-                        _buildNotesField(),
-
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         // Auto-save toggle
                         _buildAutoSaveToggle(),
 
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
                         // Calculate Button
                         SizedBox(
@@ -375,7 +370,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                               ),
                             ),
                             icon: isSaving
-                                ? SizedBox(
+                                ? const SizedBox(
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
@@ -383,10 +378,11 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : Icon(FontAwesomeIcons.calculator, size: 20),
+                                : const Icon(FontAwesomeIcons.calculator,
+                                    size: 20),
                             label: Text(
                               isSaving ? 'Saving...' : 'Calculate Dosage',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
@@ -394,12 +390,12 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                           ),
                         ),
 
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
                         // Information Section
                         if (!canEditHemophiliaType) _buildInfoBanner(),
 
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
                         // Disclaimer Section
                         _buildDisclaimerSection(),
@@ -415,7 +411,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
   Widget _buildResultContainer() {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(24),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -426,15 +422,16 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.calculate, color: Colors.green, size: 20),
+                child:
+                    const Icon(Icons.calculate, color: Colors.green, size: 20),
               ),
-              SizedBox(width: 12),
-              Text(
+              const SizedBox(width: 12),
+              const Text(
                 'Recommended Dosage',
                 style: TextStyle(
                   fontSize: 16,
@@ -444,10 +441,10 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
               ),
             ],
           ),
-          SizedBox(height: 16),
+          const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.grey.shade50,
               borderRadius: BorderRadius.circular(12),
@@ -458,15 +455,15 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                     children: [
                       Icon(
                         Icons.info_outline,
-                        size: 48,
+                        size: 34,
                         color: Colors.grey.shade500,
                       ),
-                      SizedBox(height: 12),
+                      const SizedBox(height: 12),
                       Text(
                         'Enter parameters and press calculate',
                         style: TextStyle(
                           color: Colors.grey.shade600,
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w500,
                         ),
                         textAlign: TextAlign.center,
@@ -477,15 +474,15 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                     children: [
                       Text(
                         '${result!.toStringAsFixed(2)} IU',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 32,
                           color: Colors.green,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 12,
                           vertical: 6,
                         ),
@@ -495,7 +492,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                         ),
                         child: Text(
                           'For $selectedType',
-                          style: TextStyle(
+                          style: const TextStyle(
                             color: Colors.green,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -528,7 +525,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
             color: Colors.grey.shade700,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
@@ -537,20 +534,20 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
           ),
           child: TextField(
             controller: controller,
-            keyboardType: TextInputType.numberWithOptions(decimal: true),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: InputDecoration(
               hintText: hint,
               hintStyle: TextStyle(color: Colors.grey.shade500),
               prefixIcon: Icon(icon, color: Colors.green),
               border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 12,
               ),
             ),
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           helperText,
           style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -559,47 +556,9 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
     );
   }
 
-  Widget _buildNotesField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Notes (Optional)',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade700,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade300),
-          ),
-          child: TextField(
-            controller: notesController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              hintText: 'Add any notes about this calculation...',
-              hintStyle: TextStyle(color: Colors.grey.shade500),
-              prefixIcon: Icon(Icons.note_add, color: Colors.green),
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   Widget _buildAutoSaveToggle() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -607,13 +566,13 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.auto_awesome, color: Colors.green),
-          SizedBox(width: 12),
+          const Icon(Icons.auto_awesome, color: Colors.green),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Auto-save Calculations',
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
                 ),
@@ -650,7 +609,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
             color: Colors.grey.shade700,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
             color: canEditHemophiliaType
@@ -671,7 +630,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                   onChanged: (val) {
                     if (val != null) setState(() => selectedType = val);
                   },
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.bloodtype, color: Colors.green),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -681,11 +640,12 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                   ),
                 )
               : Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       Icon(Icons.bloodtype, color: Colors.grey.shade500),
-                      SizedBox(width: 12),
+                      const SizedBox(width: 12),
                       Expanded(
                         child: Text(
                           selectedType,
@@ -706,7 +666,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
 
   Widget _buildInfoBanner() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.blue.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -714,8 +674,8 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.info_outline, color: Colors.blue, size: 24),
-          SizedBox(width: 12),
+          const Icon(Icons.info_outline, color: Colors.blue, size: 24),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -727,7 +687,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                     color: Colors.blue.shade700,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   'Your hemophilia type is set based on your profile and cannot be changed. Only caregivers can modify this setting.',
                   style: TextStyle(color: Colors.blue.shade600, fontSize: 13),
@@ -742,7 +702,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
 
   Widget _buildDisclaimerSection() {
     return Container(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.orange.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -757,7 +717,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                 color: Colors.orange.shade700,
                 size: 24,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   'Important Disclaimer',
@@ -770,7 +730,7 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
               ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             'This calculator provides estimates only. Always consult with your healthcare provider before making any changes to your treatment plan. Dosage requirements may vary based on individual factors.',
             style: TextStyle(
@@ -788,16 +748,16 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.6,
-        maxChildSize: 0.9,
+        initialChildSize: 0.7,
+        maxChildSize: 0.95,
         minChildSize: 0.3,
         expand: false,
         builder: (context, scrollController) => Container(
-          padding: EdgeInsets.all(20),
+          padding: const EdgeInsets.all(20),
           child: Column(
             children: [
               Container(
@@ -808,55 +768,161 @@ class _DosageCalculatorScreenState extends State<DosageCalculatorScreen> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              SizedBox(height: 20),
-              Text(
-                'Calculation History',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              const SizedBox(height: 16),
+              Row(
+                children: const [
+                  Icon(Icons.history, color: Colors.green, size: 28),
+                  SizedBox(width: 12),
+                  Text(
+                    'Calculation History',
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                ],
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 18),
               Expanded(
-                child: ListView.builder(
-                  controller: scrollController,
-                  itemCount: calculationHistory.length,
-                  itemBuilder: (context, index) {
-                    final calc = calculationHistory[index];
-                    final timestamp = calc['createdAt']?.toDate();
-                    return Card(
-                      margin: EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        title: Text(
-                          '${calc['calculatedDosage'].toStringAsFixed(2)} IU',
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                child: calculationHistory.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
+                            Icon(Icons.hourglass_empty,
+                                color: Colors.grey.shade400, size: 48),
+                            const SizedBox(height: 12),
                             Text(
-                              '${calc['hemophiliaType']} • ${calc['weight']}kg • ${calc['targetFactorLevel']}%',
+                              'No calculations yet.',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
-                            if (calc['notes'] != null &&
-                                calc['notes'].isNotEmpty)
-                              Text(
-                                'Notes: ${calc['notes']}',
-                                style: TextStyle(fontStyle: FontStyle.italic),
-                              ),
-                            if (timestamp != null)
-                              Text(
-                                '${timestamp.day}/${timestamp.month}/${timestamp.year} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}',
-                              ),
                           ],
                         ),
-                        leading: Container(
-                          padding: EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(Icons.calculate, color: Colors.green),
-                        ),
+                      )
+                    : ListView.separated(
+                        controller: scrollController,
+                        itemCount: calculationHistory.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final calc = calculationHistory[index];
+                          final timestamp = calc['createdAt']?.toDate();
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: Colors.grey.shade200),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.07),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: ListTile(
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 12),
+                              leading: CircleAvatar(
+                                backgroundColor: Colors.green.withOpacity(0.12),
+                                child: const Icon(Icons.calculate,
+                                    color: Colors.green),
+                              ),
+                              title: Text(
+                                '${calc['calculatedDosage'].toStringAsFixed(2)} IU',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                  color: Colors.green,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${calc['hemophiliaType']} • ${calc['weight']}kg • ${calc['targetFactorLevel']}%',
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  if (calc['notes'] != null &&
+                                      calc['notes'].isNotEmpty)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        'Notes: ${calc['notes']}',
+                                        style: TextStyle(
+                                          fontStyle: FontStyle.italic,
+                                          color: Colors.grey.shade600,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                    ),
+                                  if (timestamp != null)
+                                    Padding(
+                                      padding: const EdgeInsets.only(top: 4),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.access_time,
+                                              size: 14, color: Colors.grey),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '${timestamp.day}/${timestamp.month}/${timestamp.year} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}',
+                                            style: TextStyle(
+                                              color: Colors.grey.shade500,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              trailing: Icon(Icons.chevron_right,
+                                  color: Colors.grey.shade400),
+                              onTap: () {
+                                // Optionally show details or allow actions
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(16)),
+                                    title: const Text('Calculation Details'),
+                                    content: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                            'Dosage: ${calc['calculatedDosage'].toStringAsFixed(2)} IU'),
+                                        Text('Type: ${calc['hemophiliaType']}'),
+                                        Text('Weight: ${calc['weight']} kg'),
+                                        Text(
+                                            'Target Level: ${calc['targetFactorLevel']}%'),
+                                        if (calc['notes'] != null &&
+                                            calc['notes'].isNotEmpty)
+                                          Text('Notes: ${calc['notes']}'),
+                                        if (timestamp != null)
+                                          Text(
+                                              'Date: ${timestamp.day}/${timestamp.month}/${timestamp.year} ${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}'),
+                                      ],
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        child: const Text('Close'),
+                                        onPressed: () =>
+                                            Navigator.of(context).pop(),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
               ),
             ],
           ),

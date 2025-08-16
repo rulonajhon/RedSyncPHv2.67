@@ -28,7 +28,7 @@ class _EducationalResourcesScreenState
             // Header section
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(24, 20, 24, 24),
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 border: Border(
@@ -46,7 +46,7 @@ class _EducationalResourcesScreenState
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     'Learn about hemophilia and stay informed',
                     style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
@@ -58,9 +58,10 @@ class _EducationalResourcesScreenState
             // Categories list
             Expanded(
               child: ListView.separated(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 itemCount: categories.length,
-                separatorBuilder: (context, index) => SizedBox(height: 16),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   final category = categories[index];
                   final color = EducationalDataService.getColorFromString(
@@ -99,7 +100,7 @@ class _EducationalResourcesScreenState
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -108,7 +109,7 @@ class _EducationalResourcesScreenState
               color: Colors.grey.withOpacity(0.08),
               spreadRadius: 1,
               blurRadius: 6,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -128,7 +129,7 @@ class _EducationalResourcesScreenState
                 size: 24,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
 
             // Category Content
             Expanded(
@@ -143,7 +144,7 @@ class _EducationalResourcesScreenState
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     category['description'] ?? 'Explore this category',
                     style: TextStyle(
@@ -154,11 +155,12 @@ class _EducationalResourcesScreenState
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   // Topic count badge
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
                       color: color.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),

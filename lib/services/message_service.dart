@@ -48,10 +48,8 @@ class MessageService {
       // Send notification to the receiver
       try {
         // Get sender's display name
-        final senderDoc = await _firestore
-            .collection('users')
-            .doc(senderId)
-            .get();
+        final senderDoc =
+            await _firestore.collection('users').doc(senderId).get();
         final senderData = senderDoc.data();
         final senderName =
             senderData?['displayName'] ?? senderData?['name'] ?? 'Someone';
@@ -138,8 +136,8 @@ class MessageService {
       return messages;
     } catch (e) {
       print('Error loading messages: $e');
-      // Return empty list instead of sample data
-      return [];
+      // Don't return fake data - let the error bubble up so the UI can handle it properly
+      rethrow;
     }
   }
 
@@ -150,48 +148,53 @@ class MessageService {
     return _firestore
         .collection('conversations')
         .where('participants', arrayContains: userId)
-        .orderBy('updatedAt', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-          print(
-            'Conversation stream update: ${snapshot.docs.length} conversations',
-          );
+      print(
+        'Conversation stream update: ${snapshot.docs.length} conversations',
+      );
 
-          List<Map<String, dynamic>> conversations = [];
+      List<Map<String, dynamic>> conversations = [];
 
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
-            print('Processing conversation ${doc.id}: $data');
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        print('Processing conversation ${doc.id}: $data');
 
-            final participants = List<String>.from(data['participants'] ?? []);
-            final otherUserId = participants.firstWhere(
-              (id) => id != userId,
-              orElse: () => '',
-            );
+        final participants = List<String>.from(data['participants'] ?? []);
+        final otherUserId = participants.firstWhere(
+          (id) => id != userId,
+          orElse: () => '',
+        );
 
-            if (otherUserId.isNotEmpty) {
-              // Get other user's information
-              final otherUserData = await _getUserData(otherUserId);
-              print('Other user data: $otherUserData');
+        if (otherUserId.isNotEmpty) {
+          // Get other user's information
+          final otherUserData = await _getUserData(otherUserId);
+          print('Other user data: $otherUserData');
 
-              conversations.add({
-                'id': doc.id,
-                'otherUser': otherUserData,
-                'lastMessage': data['lastMessage'] ?? '',
-                'lastMessageTimestamp':
-                    (data['lastMessageTimestamp'] as Timestamp?)?.toDate() ??
+          conversations.add({
+            'id': doc.id,
+            'otherUser': otherUserData,
+            'lastMessage': data['lastMessage'] ?? '',
+            'lastMessageTimestamp':
+                (data['lastMessageTimestamp'] as Timestamp?)?.toDate() ??
                     DateTime.now(),
-                'lastMessageSender': data['lastMessageSender'] ?? '',
-                'isLastMessageRead':
-                    data['lastMessageSender'] ==
-                    userId, // If current user sent last message, mark as read
-              });
-            }
-          }
+            'lastMessageSender': data['lastMessageSender'] ?? '',
+            'isLastMessageRead': data['lastMessageSender'] ==
+                userId, // If current user sent last message, mark as read
+          });
+        }
+      }
 
-          print('Returning ${conversations.length} conversations from stream');
-          return conversations;
-        });
+      // Sort by timestamp on client side instead of in query
+      conversations.sort((a, b) {
+        final timeA = a['lastMessageTimestamp'] as DateTime;
+        final timeB = b['lastMessageTimestamp'] as DateTime;
+        return timeB.compareTo(timeA); // Descending order (newest first)
+      });
+
+      print('Returning ${conversations.length} conversations from stream');
+      return conversations;
+    });
   }
 
   // Get all conversations for a user (keeping for backward compatibility)
@@ -202,7 +205,6 @@ class MessageService {
       final query = await _firestore
           .collection('conversations')
           .where('participants', arrayContains: userId)
-          .orderBy('updatedAt', descending: true)
           .get();
 
       print('Found ${query.docs.length} conversations');
@@ -230,21 +232,27 @@ class MessageService {
             'lastMessage': data['lastMessage'] ?? '',
             'lastMessageTimestamp':
                 (data['lastMessageTimestamp'] as Timestamp?)?.toDate() ??
-                DateTime.now(),
+                    DateTime.now(),
             'lastMessageSender': data['lastMessageSender'] ?? '',
-            'isLastMessageRead':
-                data['lastMessageSender'] ==
+            'isLastMessageRead': data['lastMessageSender'] ==
                 userId, // If current user sent last message, mark as read
           });
         }
       }
 
+      // Sort by timestamp on client side instead of in query
+      conversations.sort((a, b) {
+        final timeA = a['lastMessageTimestamp'] as DateTime;
+        final timeB = b['lastMessageTimestamp'] as DateTime;
+        return timeB.compareTo(timeA); // Descending order (newest first)
+      });
+
       print('Returning ${conversations.length} conversations');
       return conversations;
     } catch (e) {
       print('Error loading conversations: $e');
-      // Return empty list instead of sample data
-      return [];
+      // Don't return fake data - let the error bubble up so the UI can handle it properly
+      rethrow;
     }
   } // Get user data by ID
 
@@ -336,30 +344,117 @@ class MessageService {
         .orderBy('timestamp', descending: false)
         .snapshots()
         .map((snapshot) {
-          List<Map<String, dynamic>> messages = [];
+      List<Map<String, dynamic>> messages = [];
 
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
 
-            // Filter messages to only include those between the two specific users
-            if ((data['senderId'] == userId1 &&
-                    data['receiverId'] == userId2) ||
-                (data['senderId'] == userId2 &&
-                    data['receiverId'] == userId1)) {
-              messages.add({
-                'id': doc.id,
-                ...data,
-                'timestamp':
-                    (data['timestamp'] as Timestamp?)?.toDate() ??
-                    DateTime.now(),
-              });
-            }
-          }
+        // Filter messages to only include those between the two specific users
+        if ((data['senderId'] == userId1 && data['receiverId'] == userId2) ||
+            (data['senderId'] == userId2 && data['receiverId'] == userId1)) {
+          messages.add({
+            'id': doc.id,
+            ...data,
+            'timestamp':
+                (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          });
+        }
+      }
 
-          print(
-            'Message stream update: ${messages.length} messages between $userId1 and $userId2',
-          );
-          return messages;
-        });
+      print(
+        'Message stream update: ${messages.length} messages between $userId1 and $userId2',
+      );
+      return messages;
+    });
+  }
+
+  // Delete a message
+  Future<bool> deleteMessage(String messageId, String currentUserId) async {
+    try {
+      print('Attempting to delete message: $messageId by user: $currentUserId');
+      
+      // Get the message first to check ownership
+      final messageDoc = await _firestore.collection('messages').doc(messageId).get();
+      
+      if (!messageDoc.exists) {
+        print('Message not found');
+        return false;
+      }
+      
+      final messageData = messageDoc.data()!;
+      final senderId = messageData['senderId'];
+      
+      // Check if the current user is the sender (only sender can delete their own messages)
+      if (senderId != currentUserId) {
+        print('User $currentUserId is not authorized to delete this message');
+        return false;
+      }
+      
+      // Delete the message first
+      await _firestore.collection('messages').doc(messageId).delete();
+      print('Message deleted successfully');
+      
+      // Update the conversation's last message
+      final receiverId = messageData['receiverId'];
+      final conversationId = _getConversationId(senderId, receiverId);
+      
+      try {
+        // Get remaining messages in this conversation using a simpler query
+        final query1 = await _firestore
+            .collection('messages')
+            .where('senderId', isEqualTo: senderId)
+            .where('receiverId', isEqualTo: receiverId)
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+            
+        final query2 = await _firestore
+            .collection('messages')
+            .where('senderId', isEqualTo: receiverId)
+            .where('receiverId', isEqualTo: senderId)
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .get();
+        
+        // Combine and find the most recent message
+        List<QueryDocumentSnapshot> allDocs = [...query1.docs, ...query2.docs];
+        
+        if (allDocs.isNotEmpty) {
+          // Sort by timestamp to get the most recent
+          allDocs.sort((a, b) {
+            final aTime = (a.data() as Map<String, dynamic>)['timestamp'] as Timestamp;
+            final bTime = (b.data() as Map<String, dynamic>)['timestamp'] as Timestamp;
+            return bTime.compareTo(aTime);
+          });
+          
+          final lastMessage = allDocs.first.data() as Map<String, dynamic>;
+          await _firestore.collection('conversations').doc(conversationId).update({
+            'lastMessage': lastMessage['message'] ?? '',
+            'lastMessageTimestamp': lastMessage['timestamp'],
+            'lastMessageSender': lastMessage['senderId'],
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          print('Conversation updated with new last message');
+        } else {
+          // No messages left, clear the conversation
+          await _firestore.collection('conversations').doc(conversationId).update({
+            'lastMessage': '',
+            'lastMessageTimestamp': FieldValue.serverTimestamp(),
+            'lastMessageSender': '',
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
+          print('Conversation cleared - no messages remaining');
+        }
+      } catch (conversationError) {
+        print('Error updating conversation, but message was deleted: $conversationError');
+        // Don't return false here since the message was successfully deleted
+      }
+      
+      return true;
+    } catch (e) {
+      print('Error deleting message: $e');
+      return false;
+    }
   }
 }
+  

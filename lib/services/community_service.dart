@@ -1,14 +1,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:flutter/material.dart';
 import 'firestore.dart';
-import 'notification_service.dart';
+import 'admin_notification_service.dart';
 
 class CommunityService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirestoreService _firestoreService = FirestoreService();
-  final NotificationService _notificationService = NotificationService();
 
   // Get all posts for the community feed with real-time likes and comments
   Stream<List<Map<String, dynamic>>> getPostsStream() {
@@ -17,28 +16,28 @@ class CommunityService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .asyncMap((snapshot) async {
-          List<Map<String, dynamic>> posts = [];
+      List<Map<String, dynamic>> posts = [];
 
-          for (var doc in snapshot.docs) {
-            final data = doc.data();
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
 
-            // Get author information
-            final authorData = await _getUserData(data['authorId']);
+        // Get author information
+        final authorData = await _getUserData(data['authorId']);
 
-            posts.add({
-              'id': doc.id,
-              'content': data['content'] ?? '',
-              'timestamp':
-                  (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              'authorId': data['authorId'] ?? '',
-              'authorName': authorData['name'] ?? 'Unknown User',
-              'authorRole': authorData['role'] ?? 'Patient',
-              'imageUrl': data['imageUrl'],
-            });
-          }
-
-          return posts;
+        posts.add({
+          'id': doc.id,
+          'content': data['content'] ?? '',
+          'timestamp':
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'authorId': data['authorId'] ?? '',
+          'authorName': authorData['name'] ?? 'Unknown User',
+          'authorRole': authorData['role'] ?? 'Patient',
+          'imageUrl': data['imageUrl'],
         });
+      }
+
+      return posts;
+    });
   }
 
   // Get real-time likes count and user like status for a specific post
@@ -51,11 +50,11 @@ class CommunityService {
         .collection('likes')
         .snapshots()
         .map((snapshot) {
-          final likesCount = snapshot.docs.length;
-          final isLiked = snapshot.docs.any((like) => like.id == currentUserId);
+      final likesCount = snapshot.docs.length;
+      final isLiked = snapshot.docs.any((like) => like.id == currentUserId);
 
-          return {'count': likesCount, 'isLiked': isLiked};
-        });
+      return {'count': likesCount, 'isLiked': isLiked};
+    });
   }
 
   // Get real-time comments count for a specific post
@@ -77,19 +76,19 @@ class CommunityService {
         .orderBy('timestamp', descending: false)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) {
-            final data = doc.data();
-            return {
-              'id': doc.id,
-              'content': data['content'] ?? '',
-              'timestamp':
-                  (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-              'authorId': data['authorId'] ?? '',
-              'authorName': data['authorName'] ?? 'Unknown User',
-              'authorRole': data['authorRole'] ?? 'Patient',
-            };
-          }).toList();
-        });
+      return snapshot.docs.map((doc) {
+        final data = doc.data();
+        return {
+          'id': doc.id,
+          'content': data['content'] ?? '',
+          'timestamp':
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'authorId': data['authorId'] ?? '',
+          'authorName': data['authorName'] ?? 'Unknown User',
+          'authorRole': data['authorRole'] ?? 'Patient',
+        };
+      }).toList();
+    });
   }
 
   // Create a new post
@@ -114,10 +113,8 @@ class CommunityService {
 
     try {
       // Get post data to check author and content
-      final postDoc = await _firestore
-          .collection('community_posts')
-          .doc(postId)
-          .get();
+      final postDoc =
+          await _firestore.collection('community_posts').doc(postId).get();
       if (!postDoc.exists) return;
 
       final postData = postDoc.data()!;
@@ -151,7 +148,7 @@ class CommunityService {
             'Creating like notification for user: $postAuthorId by $currentUserName',
           );
 
-          // Store notification in Firestore
+          // Store notification in Firestore (this will be picked up by the post author's app)
           await _firestoreService.createNotificationWithData(
             uid: postAuthorId,
             text:
@@ -164,17 +161,11 @@ class CommunityService {
             },
           );
 
-          // Show local notification with proper navigation
-          await _notificationService.showPostNotification(
-            id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-            title: 'New Like!',
-            body:
-                '$currentUserName liked your post: "${postContent.length > 30 ? '${postContent.substring(0, 30)}...' : postContent}"',
-            postId: postId,
-            type: 'like',
-          );
+          print('Like notification stored in Firestore for post author');
 
-          print('Like notification created successfully');
+          // Note: Local notifications should only be shown to the recipient (post author)
+          // when they receive the notification through their notification stream,
+          // not when someone else (liker) creates the notification.
         }
       }
     } catch (e) {
@@ -195,10 +186,8 @@ class CommunityService {
 
     try {
       // Get post data to check author and content
-      final postDoc = await _firestore
-          .collection('community_posts')
-          .doc(postId)
-          .get();
+      final postDoc =
+          await _firestore.collection('community_posts').doc(postId).get();
       if (!postDoc.exists) return;
 
       final postData = postDoc.data()!;
@@ -214,20 +203,23 @@ class CommunityService {
           .doc(postId)
           .collection('comments')
           .add({
-            'content': content,
-            'authorId': currentUser.uid,
-            'authorName': userName,
-            'authorRole': userRole,
-            'timestamp': FieldValue.serverTimestamp(),
-          });
+        'content': content,
+        'authorId': currentUser.uid,
+        'authorName': userName,
+        'authorRole': userRole,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
       // Send notification to post author (don't notify if user comments on their own post)
       if (postAuthorId != currentUser.uid) {
         print(
-          'Creating comment notification for user: $postAuthorId by $userName',
+          'Creating comment notification for user: $postAuthorId by $userName (commenter ID: ${currentUser.uid})',
         );
+        print('Post author ID: $postAuthorId');
+        print('Current user ID: ${currentUser.uid}');
+        print('Are they different? ${postAuthorId != currentUser.uid}');
 
-        // Store notification in Firestore
+        // Store notification in Firestore (this will be picked up by the post author's app)
         await _firestoreService.createNotificationWithData(
           uid: postAuthorId,
           text:
@@ -241,17 +233,11 @@ class CommunityService {
           },
         );
 
-        // Show local notification with proper navigation
-        await _notificationService.showPostNotification(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'New Comment!',
-          body:
-              '$userName commented on your post: "${content.length > 50 ? '${content.substring(0, 50)}...' : content}"',
-          postId: postId,
-          type: 'comment',
-        );
+        print('Comment notification stored in Firestore for post author');
 
-        print('Comment notification created successfully');
+        // Note: Local notifications should only be shown to the recipient (post author)
+        // when they receive the notification through their notification stream,
+        // not when someone else (commenter) creates the notification.
       }
     } catch (e) {
       print('Error adding comment: $e');
@@ -262,10 +248,8 @@ class CommunityService {
   // Get a specific post by ID
   Future<Map<String, dynamic>?> getPostById(String postId) async {
     try {
-      final postDoc = await _firestore
-          .collection('community_posts')
-          .doc(postId)
-          .get();
+      final postDoc =
+          await _firestore.collection('community_posts').doc(postId).get();
 
       if (!postDoc.exists) {
         return null;
@@ -356,10 +340,8 @@ class CommunityService {
 
     try {
       // Get the post to check if current user is the author
-      final postDoc = await _firestore
-          .collection('community_posts')
-          .doc(postId)
-          .get();
+      final postDoc =
+          await _firestore.collection('community_posts').doc(postId).get();
       if (!postDoc.exists) {
         throw Exception('Post not found');
       }
@@ -447,6 +429,64 @@ class CommunityService {
     };
   }
 
+  // Setup admin user - call this to ensure admin user has correct role
+  Future<void> setupAdminUser({
+    required String email,
+    required String name,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Check if this is an admin email
+      final adminEmails = [
+        'admin@redsyncph.com',
+        'administrator@redsyncph.com',
+        'superadmin@redsyncph.com',
+      ];
+
+      if (!adminEmails.contains(email.toLowerCase())) {
+        throw Exception('Email not authorized for admin access');
+      }
+
+      // Create or update user document with admin role
+      await _firestore.collection('users').doc(currentUser.uid).set({
+        'name': name,
+        'email': email,
+        'role': 'admin',
+        'isAdmin': true,
+        'createdAt': FieldValue.serverTimestamp(),
+        'lastLogin': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      print('Admin user setup completed for: $email');
+    } catch (e) {
+      print('Error setting up admin user: $e');
+      rethrow;
+    }
+  }
+
+  // Quick admin check method
+  Future<bool> isCurrentUserAdmin() async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return false;
+
+      final userData = await _getUserData(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      return userRole.toLowerCase() == 'admin' ||
+          userRole.toLowerCase() == 'administrator' ||
+          userData['isAdmin'] == true ||
+          userData['admin'] == true;
+    } catch (e) {
+      print('Error checking admin status: $e');
+      return false;
+    }
+  }
+
   // Share post (create a reference/notification)
   Future<void> sharePost({required String postId, String? message}) async {
     final currentUser = _auth.currentUser;
@@ -472,7 +512,7 @@ class CommunityService {
       if (postOwnerId != currentUser.uid) {
         final sharerName = currentUser.displayName ?? 'Someone';
 
-        // Store notification in Firestore
+        // Store notification in Firestore (this will be picked up by the post author's app)
         await _firestoreService.createNotificationWithData(
           uid: postOwnerId,
           text: '$sharerName shared your post',
@@ -484,55 +524,501 @@ class CommunityService {
           },
         );
 
-        // Show local notification with proper navigation
-        await _notificationService.showPostNotification(
-          id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: 'Post Shared!',
-          body: '$sharerName shared your post',
-          postId: postId,
-          type: 'share',
-        );
+        print('Share notification stored in Firestore for post author');
+
+        // Note: Local notifications should only be shown to the recipient (post author)
+        // when they receive the notification through their notification stream,
+        // not when someone else (sharer) creates the notification.
       }
     } catch (e) {
       print('Error sharing post: $e');
     }
   }
 
-  // Delete a comment (only author can delete)
-  Future<void> deleteComment(String commentId) async {
+  // ==================== EVENTS FUNCTIONALITY ====================
+
+  // Get all community events stream
+  Stream<List<Map<String, dynamic>>> getEventsStream() {
+    return _firestore
+        .collection('community_events')
+        .where('date', isGreaterThanOrEqualTo: DateTime.now())
+        .orderBy('date', descending: false)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Map<String, dynamic>> events = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+
+        // Get author information
+        final authorData = await _getUserData(data['authorId']);
+
+        events.add({
+          'id': doc.id,
+          'title': data['title'] ?? '',
+          'description': data['description'] ?? '',
+          'date': (data['date'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'location': data['location'] ?? '',
+          'imageUrl': data['imageUrl'],
+          'eventType': data['eventType'] ?? 'general',
+          'timestamp':
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'authorId': data['authorId'] ?? '',
+          'authorName': authorData['name'] ?? 'RedSync Admin',
+          'authorRole': authorData['role'] ?? 'admin',
+          'attendeesCount': data['attendeesCount'] ?? 0,
+          'maxAttendees': data['maxAttendees'],
+        });
+      }
+
+      return events;
+    });
+  }
+
+  // Create a new community event (admin only)
+  Future<void> createEvent({
+    required String title,
+    required String description,
+    required DateTime date,
+    required TimeOfDay time,
+    required String location,
+    required String eventType,
+    String? imageUrl,
+    int? maxAttendees,
+  }) async {
     try {
-      final currentUserId = FirebaseAuth.instance.currentUser?.uid;
-      if (currentUserId == null) {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
         throw Exception('User not authenticated');
       }
 
-      // Get the comment to verify ownership
-      final commentDoc = await FirebaseFirestore.instance
-          .collection('comments')
-          .doc(commentId)
+      // Check if user is admin
+      final userData = await _getUserData(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      print('User data for event creation: $userData');
+      print('User role: $userRole');
+
+      // Check for admin role (case insensitive and multiple possible values)
+      final isAdmin = userRole.toLowerCase() == 'admin' ||
+          userRole.toLowerCase() == 'administrator' ||
+          userData['isAdmin'] == true ||
+          userData['admin'] == true;
+
+      if (!isAdmin) {
+        throw Exception(
+            'Only administrators can create events. Current role: $userRole');
+      }
+
+      // Combine date and time into a single DateTime
+      final eventDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+
+      await _firestore.collection('community_events').add({
+        'title': title,
+        'description': description,
+        'date': Timestamp.fromDate(eventDateTime),
+        'location': location,
+        'eventType': eventType,
+        'imageUrl': imageUrl,
+        'maxAttendees': maxAttendees,
+        'authorId': currentUser.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+        'attendeesCount': 0,
+      });
+
+      print('Event created successfully');
+    } catch (e) {
+      print('Error creating event: $e');
+      rethrow;
+    }
+  }
+
+  // Update an existing community event (admin only)
+  Future<void> updateEvent({
+    required String eventId,
+    required String title,
+    required String description,
+    required DateTime date,
+    required TimeOfDay time,
+    required String location,
+    required String eventType,
+    String? imageUrl,
+    int? maxAttendees,
+  }) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Check if user is admin
+      final userData = await _getUserData(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      // Check for admin role (case insensitive and multiple possible values)
+      final isAdmin = userRole.toLowerCase() == 'admin' ||
+          userRole.toLowerCase() == 'administrator' ||
+          userData['isAdmin'] == true ||
+          userData['admin'] == true;
+
+      if (!isAdmin) {
+        throw Exception(
+            'Only administrators can edit events. Current role: $userRole');
+      }
+
+      // Combine date and time into a single DateTime
+      final eventDateTime = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
+
+      await _firestore.collection('community_events').doc(eventId).update({
+        'title': title,
+        'description': description,
+        'date': Timestamp.fromDate(eventDateTime),
+        'location': location,
+        'eventType': eventType,
+        'imageUrl': imageUrl,
+        'maxAttendees': maxAttendees,
+        'lastModified': FieldValue.serverTimestamp(),
+      });
+
+      print('Event updated successfully');
+    } catch (e) {
+      print('Error updating event: $e');
+      rethrow;
+    }
+  }
+
+  // Delete a community event (admin only)
+  Future<void> deleteEvent(String eventId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Check if user is admin
+      final userData = await _getUserData(currentUser.uid);
+      final userRole = userData['role'] ?? '';
+
+      // Check for admin role (case insensitive and multiple possible values)
+      final isAdmin = userRole.toLowerCase() == 'admin' ||
+          userRole.toLowerCase() == 'administrator' ||
+          userData['isAdmin'] == true ||
+          userData['admin'] == true;
+
+      if (!isAdmin) {
+        throw Exception(
+            'Only administrators can delete events. Current role: $userRole');
+      }
+
+      // Delete the event document
+      await _firestore.collection('community_events').doc(eventId).delete();
+
+      // Also delete all associated subcollections (attendees, likes, comments)
+      final batch = _firestore.batch();
+
+      // Delete attendees
+      final attendeesSnapshot = await _firestore
+          .collection('community_events')
+          .doc(eventId)
+          .collection('attendees')
           .get();
 
-      if (!commentDoc.exists) {
-        throw Exception('Comment not found');
+      for (var doc in attendeesSnapshot.docs) {
+        batch.delete(doc.reference);
       }
 
-      final commentData = commentDoc.data() as Map<String, dynamic>;
+      // Delete likes
+      final likesSnapshot = await _firestore
+          .collection('community_events')
+          .doc(eventId)
+          .collection('likes')
+          .get();
 
-      // Verify that the current user is the owner of the comment
-      if (commentData['authorId'] != currentUserId) {
-        throw Exception('You can only delete your own comments');
+      for (var doc in likesSnapshot.docs) {
+        batch.delete(doc.reference);
       }
 
-      // Delete the comment
-      await FirebaseFirestore.instance
+      // Delete comments
+      final commentsSnapshot = await _firestore
+          .collection('community_events')
+          .doc(eventId)
           .collection('comments')
-          .doc(commentId)
-          .delete();
+          .get();
 
-      print('Comment deleted successfully');
+      for (var doc in commentsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+
+      await batch.commit();
+
+      print('Event and all associated data deleted successfully');
     } catch (e) {
-      print('Error deleting comment: $e');
-      throw e;
+      print('Error deleting event: $e');
+      rethrow;
+    }
+  }
+
+  // Get attendees for a specific event
+  Stream<Map<String, dynamic>> getEventAttendeesStream(String eventId) {
+    final currentUserId = _auth.currentUser?.uid ?? '';
+
+    return _firestore
+        .collection('community_events')
+        .doc(eventId)
+        .collection('attendees')
+        .snapshots()
+        .map((snapshot) {
+      final attendees = snapshot.docs.map((doc) => doc.id).toList();
+      final isAttending = attendees.contains(currentUserId);
+
+      return {
+        'count': attendees.length,
+        'isAttending': isAttending,
+        'attendees': attendees,
+      };
+    });
+  }
+
+  // Toggle event attendance
+  Future<void> toggleEventAttendance(String eventId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final attendeeRef = _firestore
+          .collection('community_events')
+          .doc(eventId)
+          .collection('attendees')
+          .doc(currentUser.uid);
+
+      final eventRef = _firestore.collection('community_events').doc(eventId);
+
+      final attendeeDoc = await attendeeRef.get();
+
+      if (attendeeDoc.exists) {
+        // Remove attendance
+        await attendeeRef.delete();
+        await eventRef.update({
+          'attendeesCount': FieldValue.increment(-1),
+        });
+        print('Removed attendance for event: $eventId');
+      } else {
+        // Add attendance
+        await attendeeRef.set({
+          'userId': currentUser.uid,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        await eventRef.update({
+          'attendeesCount': FieldValue.increment(1),
+        });
+        print('Added attendance for event: $eventId');
+
+        // Get event details and user data for notification
+        final eventDoc =
+            await _firestore.collection('community_events').doc(eventId).get();
+        final userData = await _getUserData(currentUser.uid);
+
+        if (eventDoc.exists) {
+          final eventData = eventDoc.data()!;
+          await AdminNotificationService.notifyEventInteraction(
+            eventId: eventId,
+            eventTitle: eventData['title'] ?? 'Community Event',
+            userAction: 'attend',
+            userName: userData['name'] ?? 'Unknown User',
+          );
+        }
+      }
+    } catch (e) {
+      print('Error toggling event attendance: $e');
+      rethrow;
+    }
+  }
+
+  // Get comments for a specific event
+  Stream<List<Map<String, dynamic>>> getEventCommentsStream(String eventId) {
+    return _firestore
+        .collection('community_events')
+        .doc(eventId)
+        .collection('comments')
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .asyncMap((snapshot) async {
+      List<Map<String, dynamic>> comments = [];
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+        final authorData = await _getUserData(data['authorId']);
+
+        comments.add({
+          'id': doc.id,
+          'content': data['content'] ?? '',
+          'timestamp':
+              (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          'authorId': data['authorId'] ?? '',
+          'authorName': authorData['name'] ?? 'Unknown User',
+          'authorRole': authorData['role'] ?? 'Patient',
+        });
+      }
+
+      return comments;
+    });
+  }
+
+  // Add comment to event
+  Future<void> addEventComment(String eventId, String content) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      await _firestore
+          .collection('community_events')
+          .doc(eventId)
+          .collection('comments')
+          .add({
+        'content': content,
+        'authorId': currentUser.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      print('Comment added to event: $eventId');
+
+      // Get event details and user data for notification
+      final eventDoc =
+          await _firestore.collection('community_events').doc(eventId).get();
+      final userData = await _getUserData(currentUser.uid);
+
+      if (eventDoc.exists) {
+        final eventData = eventDoc.data()!;
+        await AdminNotificationService.notifyEventInteraction(
+          eventId: eventId,
+          eventTitle: eventData['title'] ?? 'Community Event',
+          userAction: 'comment',
+          userName: userData['name'] ?? 'Unknown User',
+        );
+      }
+    } catch (e) {
+      print('Error adding event comment: $e');
+      rethrow;
+    }
+  }
+
+  // Get event likes stream
+  Stream<Map<String, dynamic>> getEventLikesStream(String eventId) {
+    final currentUserId = _auth.currentUser?.uid ?? '';
+
+    return _firestore
+        .collection('community_events')
+        .doc(eventId)
+        .collection('likes')
+        .snapshots()
+        .map((snapshot) {
+      final likes = snapshot.docs.map((doc) => doc.id).toList();
+      final isLiked = likes.contains(currentUserId);
+
+      return {
+        'count': likes.length,
+        'isLiked': isLiked,
+        'likes': likes,
+      };
+    });
+  }
+
+  // Toggle event like
+  Future<void> toggleEventLike(String eventId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      final likeRef = _firestore
+          .collection('community_events')
+          .doc(eventId)
+          .collection('likes')
+          .doc(currentUser.uid);
+
+      final likeDoc = await likeRef.get();
+
+      if (likeDoc.exists) {
+        // Remove like
+        await likeRef.delete();
+        print('Removed like from event: $eventId');
+      } else {
+        // Add like
+        await likeRef.set({
+          'userId': currentUser.uid,
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+        print('Added like to event: $eventId');
+
+        // Get event details and user data for notification
+        final eventDoc =
+            await _firestore.collection('community_events').doc(eventId).get();
+        final userData = await _getUserData(currentUser.uid);
+
+        if (eventDoc.exists) {
+          final eventData = eventDoc.data()!;
+          await AdminNotificationService.notifyEventInteraction(
+            eventId: eventId,
+            eventTitle: eventData['title'] ?? 'Community Event',
+            userAction: 'like',
+            userName: userData['name'] ?? 'Unknown User',
+          );
+        }
+      }
+    } catch (e) {
+      print('Error toggling event like: $e');
+      rethrow;
+    }
+  }
+
+  // Share event
+  Future<void> shareEvent(String eventId) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated');
+      }
+
+      // Get event data
+      final eventDoc =
+          await _firestore.collection('community_events').doc(eventId).get();
+      if (!eventDoc.exists) {
+        throw Exception('Event not found');
+      }
+
+      final eventData = eventDoc.data()!;
+
+      // Create a shared post in the community feed
+      await _firestore.collection('community_posts').add({
+        'content':
+            'Check out this upcoming event: ${eventData['title']}\n\n${eventData['description']}',
+        'authorId': currentUser.uid,
+        'timestamp': FieldValue.serverTimestamp(),
+        'sharedEventId': eventId,
+        'postType': 'shared_event',
+      });
+
+      print('Event shared: $eventId');
+    } catch (e) {
+      print('Error sharing event: $e');
+      rethrow;
     }
   }
 }

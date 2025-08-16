@@ -187,12 +187,12 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
         toolbarHeight: 70,
-        title: Text('Post', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Post', style: TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
         foregroundColor: Colors.redAccent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(FontAwesomeIcons.arrowLeft, size: 18),
+          icon: const Icon(FontAwesomeIcons.arrowLeft, size: 18),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -208,8 +208,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     // Post Header Section
                     Container(
                       width: double.infinity,
-                      margin: EdgeInsets.all(20),
-                      padding: EdgeInsets.all(24),
+                      margin: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -218,7 +218,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             color: Colors.grey.withOpacity(0.08),
                             spreadRadius: 1,
                             blurRadius: 8,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -240,7 +240,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                     widget.post['authorName']?[0]
                                             ?.toUpperCase() ??
                                         'U',
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       color: Colors.redAccent,
                                       fontSize: 20,
                                       fontWeight: FontWeight.bold,
@@ -248,7 +248,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(width: 16),
+                              const SizedBox(width: 16),
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -262,11 +262,11 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                         color: Colors.grey.shade800,
                                       ),
                                     ),
-                                    SizedBox(height: 4),
+                                    const SizedBox(height: 4),
                                     Row(
                                       children: [
                                         Container(
-                                          padding: EdgeInsets.symmetric(
+                                          padding: const EdgeInsets.symmetric(
                                             horizontal: 8,
                                             vertical: 2,
                                           ),
@@ -285,7 +285,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                             ),
                                           ),
                                         ),
-                                        SizedBox(width: 8),
+                                        const SizedBox(width: 8),
                                         Text(
                                           _formatTimestamp(
                                             _safeTimestamp(
@@ -305,7 +305,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             ],
                           ),
 
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
                           // Post Content
                           Text(
@@ -317,7 +317,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             ),
                           ),
 
-                          SizedBox(height: 24),
+                          const SizedBox(height: 24),
 
                           // Engagement Stats
                           StreamBuilder<Map<String, dynamic>>(
@@ -346,7 +346,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           children: [
                                             if (likesCount > 0) ...[
                                               Container(
-                                                padding: EdgeInsets.symmetric(
+                                                padding: const EdgeInsets.symmetric(
                                                   horizontal: 12,
                                                   vertical: 6,
                                                 ),
@@ -359,16 +359,16 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                   mainAxisSize:
                                                       MainAxisSize.min,
                                                   children: [
-                                                    Icon(
+                                                    const Icon(
                                                       FontAwesomeIcons
                                                           .solidHeart,
                                                       size: 14,
                                                       color: Colors.red,
                                                     ),
-                                                    SizedBox(width: 6),
+                                                    const SizedBox(width: 6),
                                                     Text(
                                                       '$likesCount',
-                                                      style: TextStyle(
+                                                      style: const TextStyle(
                                                         color: Colors.red,
                                                         fontSize: 14,
                                                         fontWeight:
@@ -379,7 +379,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                 ),
                                               ),
                                             ],
-                                            Spacer(),
+                                            const Spacer(),
                                             if (commentsCount > 0) ...[
                                               Text(
                                                 '$commentsCount comments',
@@ -392,7 +392,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                             ],
                                           ],
                                         ),
-                                        SizedBox(height: 20),
+                                        const SizedBox(height: 20),
                                       ],
 
                                       // Divider
@@ -401,7 +401,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                         height: 1,
                                         color: Colors.grey.shade200,
                                       ),
-                                      SizedBox(height: 20),
+                                      const SizedBox(height: 20),
 
                                       // Action Buttons
                                       Row(
@@ -428,7 +428,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                 _scrollController
                                                     .position
                                                     .maxScrollExtent,
-                                                duration: Duration(
+                                                duration: const Duration(
                                                   milliseconds: 300,
                                                 ),
                                                 curve: Curves.easeInOut,
@@ -458,8 +458,8 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                     // Comments Section
                     Container(
                       width: double.infinity,
-                      margin: EdgeInsets.fromLTRB(20, 0, 20, 20),
-                      padding: EdgeInsets.all(24),
+                      margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                      padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -468,7 +468,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             color: Colors.grey.withOpacity(0.08),
                             spreadRadius: 1,
                             blurRadius: 8,
-                            offset: Offset(0, 2),
+                            offset: const Offset(0, 2),
                           ),
                         ],
                       ),
@@ -483,7 +483,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               color: Colors.grey.shade800,
                             ),
                           ),
-                          SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
                           // Comments List
                           StreamBuilder<List<Map<String, dynamic>>>(
@@ -493,7 +493,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
-                                return Center(
+                                return const Center(
                                   child: Padding(
                                     padding: EdgeInsets.all(32),
                                     child: SizedBox(
@@ -511,7 +511,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               if (snapshot.hasError) {
                                 return Center(
                                   child: Padding(
-                                    padding: EdgeInsets.all(32),
+                                    padding: const EdgeInsets.all(32),
                                     child: Column(
                                       children: [
                                         Icon(
@@ -519,7 +519,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           color: Colors.orange.shade400,
                                           size: 32,
                                         ),
-                                        SizedBox(height: 16),
+                                        const SizedBox(height: 16),
                                         Text(
                                           'Error loading comments',
                                           style: TextStyle(
@@ -538,7 +538,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                               if (comments.isEmpty) {
                                 return Container(
                                   width: double.infinity,
-                                  padding: EdgeInsets.all(32),
+                                  padding: const EdgeInsets.all(32),
                                   decoration: BoxDecoration(
                                     color: Colors.grey.shade50,
                                     borderRadius: BorderRadius.circular(12),
@@ -550,7 +550,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                         color: Colors.grey.shade400,
                                         size: 32,
                                       ),
-                                      SizedBox(height: 16),
+                                      const SizedBox(height: 16),
                                       Text(
                                         'No comments yet',
                                         style: TextStyle(
@@ -559,7 +559,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                           color: Colors.grey.shade600,
                                         ),
                                       ),
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 8),
                                       Text(
                                         'Be the first to comment!',
                                         style: TextStyle(
@@ -574,14 +574,14 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
 
                               return ListView.separated(
                                 shrinkWrap: true,
-                                physics: NeverScrollableScrollPhysics(),
+                                physics: const NeverScrollableScrollPhysics(),
                                 itemCount: comments.length,
                                 separatorBuilder: (context, index) =>
-                                    SizedBox(height: 16),
+                                    const SizedBox(height: 16),
                                 itemBuilder: (context, index) {
                                   final comment = comments[index];
                                   return Container(
-                                    padding: EdgeInsets.all(16),
+                                    padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
                                       color: Colors.grey.shade50,
                                       borderRadius: BorderRadius.circular(12),
@@ -606,7 +606,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                               comment['authorName']?[0]
                                                       ?.toUpperCase() ??
                                                   'U',
-                                              style: TextStyle(
+                                              style: const TextStyle(
                                                 color: Colors.redAccent,
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.bold,
@@ -614,7 +614,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                             ),
                                           ),
                                         ),
-                                        SizedBox(width: 12),
+                                        const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
                                             crossAxisAlignment:
@@ -633,7 +633,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                           Colors.grey.shade800,
                                                     ),
                                                   ),
-                                                  SizedBox(width: 8),
+                                                  const SizedBox(width: 8),
                                                   Text(
                                                     _formatTimestamp(
                                                       _safeTimestamp(
@@ -648,7 +648,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
                                                   ),
                                                 ],
                                               ),
-                                              SizedBox(height: 6),
+                                              const SizedBox(height: 6),
                                               Text(
                                                 comment['content'] ?? '',
                                                 style: TextStyle(
@@ -676,61 +676,59 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
             ),
 
             // Comment Input
-            SafeArea(
-              child: Container(
-                padding: EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  border: Border(
-                    top: BorderSide(color: Colors.grey.shade200, width: 1),
-                  ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(color: Colors.grey.shade200, width: 1),
                 ),
-                child: SafeArea(
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade50,
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(color: Colors.grey.shade200),
-                          ),
-                          child: TextField(
-                            controller: _commentController,
-                            decoration: InputDecoration(
-                              hintText: 'Write a comment...',
-                              hintStyle: TextStyle(color: Colors.grey.shade500),
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 12,
-                              ),
-                            ),
-                            maxLines: null,
-                            textCapitalization: TextCapitalization.sentences,
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Container(
-                        width: 48,
-                        height: 48,
+              ),
+              child: SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.redAccent,
+                          color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.grey.shade200),
                         ),
-                        child: IconButton(
-                          onPressed: _addComment,
-                          icon: Icon(
-                            FontAwesomeIcons.paperPlane,
-                            color: Colors.white,
-                            size: 16,
+                        child: TextField(
+                          controller: _commentController,
+                          decoration: InputDecoration(
+                            hintText: 'Write a comment...',
+                            hintStyle: TextStyle(color: Colors.grey.shade500),
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
                           ),
-                          padding: EdgeInsets.zero,
+                          maxLines: null,
+                          textCapitalization: TextCapitalization.sentences,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.redAccent,
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: IconButton(
+                        onPressed: _addComment,
+                        icon: const Icon(
+                          FontAwesomeIcons.paperPlane,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        padding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -749,7 +747,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(20),
@@ -758,7 +756,7 @@ class _PostDetailScreenState extends State<PostDetailScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(icon, size: 16, color: color),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(

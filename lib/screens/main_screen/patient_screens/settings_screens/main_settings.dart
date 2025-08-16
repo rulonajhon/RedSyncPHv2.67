@@ -4,8 +4,6 @@ import 'package:hemophilia_manager/auth/auth.dart';
 import 'package:hemophilia_manager/services/firestore.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-import '../../../../../main.dart'; // Import the themeNotifier
-
 class UserSettings extends StatefulWidget {
   const UserSettings({super.key});
 
@@ -76,7 +74,7 @@ class _UserSettingsState extends State<UserSettings> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Text('You have been logged out.'),
         backgroundColor: Colors.redAccent,
         duration: Duration(seconds: 2),
@@ -90,17 +88,17 @@ class _UserSettingsState extends State<UserSettings> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Delete Account?',
           style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
         ),
-        content: Text(
+        content: const Text(
           'Are you sure you want to delete your account? This action cannot be undone.',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: Text('Cancel'),
+            child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
@@ -108,7 +106,7 @@ class _UserSettingsState extends State<UserSettings> {
               foregroundColor: Colors.white,
               backgroundColor: Colors.red,
             ),
-            child: Text('Delete'),
+            child: const Text('Delete'),
           ),
         ],
       ),
@@ -126,7 +124,7 @@ class _UserSettingsState extends State<UserSettings> {
         await AuthService().signOut();
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Account deleted.'),
               backgroundColor: Colors.redAccent,
             ),
@@ -147,6 +145,22 @@ class _UserSettingsState extends State<UserSettings> {
         ),
       );
     }
+  }
+
+  void _showUnderDevelopmentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Under Development'),
+        content: const Text('This feature is currently under development.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -177,17 +191,17 @@ class _UserSettingsState extends State<UserSettings> {
                       ? NetworkImage(_photoUrl!)
                       : null,
                   child: _photoUrl == null || _photoUrl!.isEmpty
-                      ? Icon(Icons.person, size: 36, color: Colors.white)
+                      ? const Icon(Icons.person, size: 36, color: Colors.white)
                       : null,
                 ),
-                SizedBox(width: 18),
+                const SizedBox(width: 18),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         _name ?? 'Loading...',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 20,
                           color: Colors.black87,
@@ -195,7 +209,7 @@ class _UserSettingsState extends State<UserSettings> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Text(
                         _email ?? 'Loading...',
                         style: TextStyle(
@@ -205,15 +219,12 @@ class _UserSettingsState extends State<UserSettings> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       TextButton.icon(
                         onPressed: _navigateToEditProfile,
-                        icon: Icon(
-                          Icons.edit,
-                          size: 18,
-                          color: Colors.redAccent,
-                        ),
-                        label: Text(
+                        icon: const Icon(Icons.edit,
+                            size: 18, color: Colors.redAccent),
+                        label: const Text(
                           'Edit Profile',
                           style: TextStyle(
                             color: Colors.redAccent,
@@ -222,7 +233,7 @@ class _UserSettingsState extends State<UserSettings> {
                         ),
                         style: TextButton.styleFrom(
                           padding: EdgeInsets.zero,
-                          minimumSize: Size(0, 32),
+                          minimumSize: const Size(0, 32),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
@@ -232,11 +243,11 @@ class _UserSettingsState extends State<UserSettings> {
               ],
             ),
 
-            SizedBox(height: 28),
+            const SizedBox(height: 28),
 
             // Settings Section Header
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'General',
                 style: TextStyle(
@@ -252,7 +263,7 @@ class _UserSettingsState extends State<UserSettings> {
             _settingsTile(
               icon: FontAwesomeIcons.language,
               title: 'Language',
-              onTap: () {},
+              onTap: _showUnderDevelopmentDialog,
             ),
             _settingsTile(
               icon: FontAwesomeIcons.lock,
@@ -262,14 +273,14 @@ class _UserSettingsState extends State<UserSettings> {
             _settingsTile(
               icon: FontAwesomeIcons.bell,
               title: 'Notification and Sounds',
-              onTap: () {},
+              onTap: _showUnderDevelopmentDialog,
             ),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Info Section Header
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Info & Support',
                 style: TextStyle(
@@ -284,24 +295,24 @@ class _UserSettingsState extends State<UserSettings> {
             _settingsTile(
               icon: FontAwesomeIcons.circleInfo,
               title: 'About Us',
-              onTap: () {},
+              onTap: _showUnderDevelopmentDialog,
             ),
             _settingsTile(
               icon: FontAwesomeIcons.broom,
               title: 'Clear cache',
-              onTap: () {},
+              onTap: _showUnderDevelopmentDialog,
             ),
             _settingsTile(
               icon: FontAwesomeIcons.fileContract,
               title: 'Terms and Privacy Policy',
-              onTap: () {},
+              onTap: _showUnderDevelopmentDialog,
             ),
 
-            SizedBox(height: 24),
+            const SizedBox(height: 24),
 
             // Danger Section Header
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8.0),
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
               child: Text(
                 'Account',
                 style: TextStyle(
@@ -320,24 +331,24 @@ class _UserSettingsState extends State<UserSettings> {
               textColor: Colors.red,
               onTap: _deleteAccount,
             ),
-
-            SizedBox(height: 16),
+            
+            const SizedBox(height: 16),
 
             Center(
-              child: Text(
-                'Version 1.0.0-Alpha',
-                style: TextStyle(color: Colors.grey.shade600),
-              ),
-            ),
+                child: const Text(
+              'Version 1.0.0 Alpha',
+              style: TextStyle(color: Colors.grey),
+            )),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Logout Button
             Center(
               child: TextButton.icon(
                 onPressed: _logout,
-                icon: Icon(Icons.logout, color: Colors.blueGrey, size: 22),
-                label: Text(
+                icon:
+                    const Icon(Icons.logout, color: Colors.blueGrey, size: 22),
+                label: const Text(
                   'Logout',
                   style: TextStyle(
                     color: Colors.blueGrey,
@@ -346,7 +357,8 @@ class _UserSettingsState extends State<UserSettings> {
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                 ),
               ),
             ),
@@ -376,7 +388,7 @@ class _UserSettingsState extends State<UserSettings> {
       ),
       trailing: trailing,
       onTap: onTap,
-      contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: 2),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 0, vertical: 2),
       minLeadingWidth: 32,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       dense: true,

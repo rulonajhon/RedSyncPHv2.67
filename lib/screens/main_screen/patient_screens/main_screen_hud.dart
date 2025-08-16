@@ -9,7 +9,7 @@ import 'package:hemophilia_manager/auth/auth.dart';
 import 'package:hemophilia_manager/services/firestore.dart';
 import 'package:hemophilia_manager/screens/main_screen/patient_screens/notifications_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:hemophilia_manager/screens/main_screen/patient_screens/community_screen.dart';
+import 'package:hemophilia_manager/screens/main_screen/patient_screens/community/community_screen.dart';
 
 class MainScreenDisplay extends StatefulWidget {
   const MainScreenDisplay({super.key});
@@ -36,10 +36,10 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
 
   // LIST OF DISPLAYED SCREENS - Updated for separate community screen
   final List<Widget> _screens = [
-    Dashboard(), // Index 0
-    EducationalResourcesScreen(), // Index 1
+    const Dashboard(), // Index 0
+    const EducationalResourcesScreen(), // Index 1
     Container(), // Index 2 - Placeholder for chatbot (opens separately)
-    ClinicLocatorScreen(), // Index 3
+    const ClinicLocatorScreen(), // Index 3
     Container(), // Index 4 - Placeholder for community (opens separately)
     Container(), // Index 5 - Placeholder for messages (opens separately)
   ];
@@ -79,7 +79,8 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
       // Navigate to authentication screen and clear all routes
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => AuthenticationLandingScreen()),
+        MaterialPageRoute(
+            builder: (context) => const AuthenticationLandingScreen()),
         (route) => false,
       );
 
@@ -95,7 +96,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                   : 'Logged out successfully',
             ),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -106,7 +107,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => AuthenticationLandingScreen(),
+            builder: (context) => const AuthenticationLandingScreen(),
           ),
           (route) => false,
         );
@@ -140,7 +141,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 70,
-        title: Text(
+        title: const Text(
           'RedSync PH',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -223,25 +224,23 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
           ? Container() // Empty container for chatbot, community, and messages placeholders
           : _screens[_currentIndex],
       floatingActionButton: AnimatedSwitcher(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         transitionBuilder: (Widget child, Animation<double> animation) {
           return ScaleTransition(
             scale: animation,
             child: FadeTransition(opacity: animation, child: child),
           );
         },
-        child:
-            _currentIndex ==
-                3 // Hide FAB when on clinic locator (index 3)
-            ? SizedBox.shrink(key: ValueKey('hidden'))
+        child: _currentIndex == 3 // Hide FAB when on clinic locator (index 3)
+            ? const SizedBox.shrink(key: ValueKey('hidden'))
             : FloatingActionButton(
-                key: ValueKey('visible'),
+                key: const ValueKey('visible'),
                 heroTag: "main_screen_fab",
                 onPressed: () {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
-                    shape: RoundedRectangleBorder(
+                    shape: const RoundedRectangleBorder(
                       borderRadius: BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
@@ -256,7 +255,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                           padding: const EdgeInsets.all(20.0),
                           decoration: BoxDecoration(
                             color: Colors.grey.shade100,
-                            borderRadius: BorderRadius.vertical(
+                            borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(24),
                             ),
                           ),
@@ -272,8 +271,8 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     borderRadius: BorderRadius.circular(2),
                                   ),
                                 ),
-                                SizedBox(height: 10),
-                                Text(
+                                const SizedBox(height: 10),
+                                const Text(
                                   'Quick Actions',
                                   style: TextStyle(
                                     fontWeight: FontWeight.bold,
@@ -281,21 +280,21 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     color: Colors.black87,
                                   ),
                                 ),
-                                SizedBox(height: 10),
+                                const SizedBox(height: 10),
                                 _ActionTile(
                                   label: 'Log New Bleed',
                                   icon: FontAwesomeIcons.droplet,
-                                  bgColor: Color(0xFFE57373),
+                                  bgColor: const Color(0xFFE57373),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.pushNamed(context, '/log_bleed');
                                   },
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 _ActionTile(
                                   label: 'Log New Infusion',
                                   icon: FontAwesomeIcons.syringe,
-                                  bgColor: Color(0xFFBA68C8),
+                                  bgColor: const Color(0xFFBA68C8),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.pushNamed(
@@ -304,11 +303,11 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     );
                                   },
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 _ActionTile(
                                   label: 'Schedule Medication',
                                   icon: FontAwesomeIcons.pills,
-                                  bgColor: Color(0xFF64B5F6),
+                                  bgColor: const Color(0xFF64B5F6),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.pushNamed(
@@ -317,11 +316,11 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     );
                                   },
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 _ActionTile(
                                   label: 'Dosage Calculator',
                                   icon: FontAwesomeIcons.calculator,
-                                  bgColor: Color(0xFF81C784),
+                                  bgColor: const Color(0xFF81C784),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.pushNamed(
@@ -330,11 +329,11 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     );
                                   },
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 _ActionTile(
                                   label: 'Log History',
                                   icon: FontAwesomeIcons.clockRotateLeft,
-                                  bgColor: Color(0xFFFFB74D),
+                                  bgColor: const Color(0xFFFFB74D),
                                   onTap: () {
                                     Navigator.pop(context);
                                     Navigator.pushNamed(
@@ -343,7 +342,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     );
                                   },
                                 ),
-                                SizedBox(height: 5),
+                                const SizedBox(height: 5),
                                 Container(
                                   width: double.infinity,
                                   decoration: BoxDecoration(
@@ -355,16 +354,16 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     color: Colors.white,
                                   ),
                                   child: ListTile(
-                                    contentPadding: EdgeInsets.symmetric(
+                                    contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 20,
                                       vertical: 8,
                                     ),
-                                    leading: Icon(
+                                    leading: const Icon(
                                       FontAwesomeIcons.plus,
                                       color: Colors.redAccent,
                                       size: 20,
                                     ),
-                                    title: Text(
+                                    title: const Text(
                                       'Add Care Provider',
                                       style: TextStyle(
                                         color: Colors.redAccent,
@@ -381,7 +380,7 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                                     },
                                   ),
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                               ],
                             ),
                           ),
@@ -391,24 +390,23 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                   );
                 },
                 backgroundColor: Colors.redAccent,
-                child: Icon(Icons.add, color: Colors.white, size: 20),
+                child: const Icon(Icons.add, color: Colors.white, size: 20),
               ),
       ),
-      floatingActionButtonLocation: _currentIndex == 3
-          ? null
-          : FloatingActionButtonLocation.endFloat,
+      floatingActionButtonLocation:
+          _currentIndex == 3 ? null : FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: SafeArea(
         child: Container(
           height: 80,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             boxShadow: [
               BoxShadow(
                 color: Colors.grey.withOpacity(0.2),
                 spreadRadius: 1,
                 blurRadius: 8,
-                offset: Offset(0, -2),
+                offset: const Offset(0, -2),
               ),
             ],
           ),
@@ -419,7 +417,8 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
               return GestureDetector(
                 onTap: () => _onBottomNavTap(index),
                 child: Container(
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                   decoration: BoxDecoration(
                     color: isActive
                         ? Colors.redAccent.withOpacity(0.1)
@@ -431,19 +430,17 @@ class _MainScreenDisplayState extends State<MainScreenDisplay> {
                     children: [
                       Icon(
                         iconList[index],
-                        color: isActive
-                            ? Colors.redAccent
-                            : Colors.grey.shade600,
+                        color:
+                            isActive ? Colors.redAccent : Colors.grey.shade600,
                         size: 20,
                       ),
-                      SizedBox(height: 4),
+                      const SizedBox(height: 4),
                       Container(
                         width: 4,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: isActive
-                              ? Colors.redAccent
-                              : Colors.transparent,
+                          color:
+                              isActive ? Colors.redAccent : Colors.transparent,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
@@ -482,17 +479,19 @@ class _ActionTile extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         leading: Icon(icon, color: Colors.white, size: 24),
         title: Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontWeight: FontWeight.w500,
             fontSize: 16,
             color: Colors.white,
           ),
         ),
-        trailing: Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
+        trailing:
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 16),
         onTap: onTap,
       ),
     );

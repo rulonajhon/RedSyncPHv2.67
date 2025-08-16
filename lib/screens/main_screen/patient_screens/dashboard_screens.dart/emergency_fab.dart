@@ -16,7 +16,7 @@ class _EmergencyFabState extends State<EmergencyFab> {
       onPressed: () {
         showModalBottomSheet(
           context: context,
-          shape: RoundedRectangleBorder(
+          shape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
           ),
           isScrollControlled: true,
@@ -33,7 +33,7 @@ class _EmergencyFabState extends State<EmergencyFab> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Center(
+                    const Center(
                       child: Text(
                         'Is there an emergency?',
                         style: TextStyle(
@@ -42,50 +42,50 @@ class _EmergencyFabState extends State<EmergencyFab> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 18),
+                    const SizedBox(height: 18),
                     Expanded(
                       child: ListView(
                         children: [
                           ListTile(
-                            leading: Icon(Icons.phone, color: Colors.redAccent),
-                            title: Text('Call Emergency Contact'),
+                            leading: const Icon(Icons.phone, color: Colors.redAccent),
+                            title: const Text('Call Emergency Contact'),
                             onTap: () {
                               // Implement call emergency contact
                             },
                           ),
                           ListTile(
-                            leading: Icon(Icons.phone, color: Colors.redAccent),
-                            title: Text('Call Care Provider'),
+                            leading: const Icon(Icons.phone, color: Colors.redAccent),
+                            title: const Text('Call Care Provider'),
                             onTap: () {
                               // Implement call care provider
                             },
                           ),
                           ListTile(
-                            leading: Icon(
+                            leading: const Icon(
                               FontAwesomeIcons.houseChimneyMedical,
                               color: Colors.blueAccent,
                             ),
-                            title: Text('Find Nearest Hospital'),
+                            title: const Text('Find Nearest Hospital'),
                             onTap: () {
                               // Implement find nearest hospital
                             },
                           ),
                           ListTile(
-                            leading: Icon(
+                            leading: const Icon(
                               FontAwesomeIcons.bookMedical,
                               color: Colors.green,
                             ),
-                            title: Text('Bleed Guide'),
+                            title: const Text('Bleed Guide'),
                             onTap: () {
                               // Implement bleed guide
                             },
                           ),
                           ListTile(
-                            leading: Icon(
+                            leading: const Icon(
                               FontAwesomeIcons.bookMedical,
                               color: Colors.amber,
                             ),
-                            title: Text('Infusion Guide'),
+                            title: const Text('Infusion Guide'),
                             onTap: () {
                               // Implement infusion guide
                             },
@@ -105,7 +105,7 @@ class _EmergencyFabState extends State<EmergencyFab> {
       tooltip: 'Emergency',
       elevation: 6,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-      child: Icon(FontAwesomeIcons.triangleExclamation),
+      child: const Icon(FontAwesomeIcons.triangleExclamation),
     );
   }
 }

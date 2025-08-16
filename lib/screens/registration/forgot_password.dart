@@ -34,7 +34,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Password reset email sent! Check your inbox.'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
@@ -67,7 +67,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('An unexpected error occurred. Please try again.'),
           backgroundColor: Colors.redAccent,
           behavior: SnackBarBehavior.floating,
@@ -82,7 +82,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Reset Password',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -92,18 +92,18 @@ class _ForgotPasswordState extends State<ForgotPassword> {
         foregroundColor: Colors.redAccent,
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(24),
+        padding: const EdgeInsets.all(24),
         child: Form(
           key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
 
               // Header Section
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(32),
+                padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(16),
@@ -124,17 +124,17 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         size: 40,
                       ),
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
                     Text(
                       _emailSent ? 'Check Your Email' : 'Forgot Your Password?',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 24,
                         color: Colors.black87,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    SizedBox(height: 12),
+                    const SizedBox(height: 12),
                     Text(
                       _emailSent
                           ? 'We\'ve sent a password reset link to ${_emailController.text.trim()}'
@@ -150,11 +150,11 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                 ),
               ),
 
-              SizedBox(height: 40),
+              const SizedBox(height: 24),
 
               if (!_emailSent) ...[
                 // Email Input Section
-                Align(
+                const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Email Address',
@@ -165,7 +165,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                     ),
                   ),
                 ),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.grey.shade50,
@@ -194,16 +194,16 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                         size: 20,
                       ),
                       border: InputBorder.none,
-                      contentPadding: EdgeInsets.all(20),
+                      contentPadding: const EdgeInsets.all(20),
                     ),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.black87,
                     ),
                   ),
                 ),
 
-                SizedBox(height: 32),
+                const SizedBox(height: 24),
 
                 // Send Reset Email Button
                 SizedBox(
@@ -212,7 +212,7 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   child: ElevatedButton.icon(
                     onPressed: _isLoading ? null : _sendResetEmail,
                     icon: _isLoading
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
@@ -220,14 +220,14 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                               strokeWidth: 2,
                             ),
                           )
-                        : Icon(
+                        : const Icon(
                             Icons.send,
                             color: Colors.white,
                             size: 20,
                           ),
                     label: Text(
                       _isLoading ? 'Sending...' : 'Send Reset Link',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                         color: Colors.white,
@@ -249,12 +249,12 @@ class _ForgotPasswordState extends State<ForgotPassword> {
                   height: 56,
                   child: ElevatedButton.icon(
                     onPressed: () => setState(() => _emailSent = false),
-                    icon: Icon(
+                    icon: const Icon(
                       Icons.refresh,
                       color: Colors.white,
                       size: 20,
                     ),
-                    label: Text(
+                    label: const Text(
                       'Send Again',
                       style: TextStyle(
                         fontWeight: FontWeight.w600,

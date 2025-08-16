@@ -1,4 +1,4 @@
-import 'lib/screens/main_screen/patient_screens/community_screen.dart';
+import 'lib/screens/main_screen/patient_screens/community/community_screen.dart';
 
 void main() {
   // Test if we can reference CommunityScreen

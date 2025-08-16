@@ -23,7 +23,7 @@ class EducationalTopicsScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           categoryTitle,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
         foregroundColor: categoryColor,
@@ -43,8 +43,8 @@ class EducationalTopicsScreen extends StatelessWidget {
             // Category Header
             Container(
               width: double.infinity,
-              margin: EdgeInsets.all(20),
-              padding: EdgeInsets.all(24),
+              margin: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
@@ -53,7 +53,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                     color: Colors.grey.withOpacity(0.1),
                     spreadRadius: 1,
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -72,7 +72,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                       color: categoryColor,
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Text(
                     categoryTitle,
                     style: TextStyle(
@@ -82,9 +82,9 @@ class EducationalTopicsScreen extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: categoryColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -105,16 +105,16 @@ class EducationalTopicsScreen extends StatelessWidget {
             // Topics List
             Expanded(
               child: ListView.separated(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 itemCount: topics.length,
-                separatorBuilder: (context, index) => SizedBox(height: 12),
+                separatorBuilder: (context, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final topic = topics[index];
                   return _buildTopicItem(topic, context);
                 },
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -136,7 +136,7 @@ class EducationalTopicsScreen extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -145,7 +145,7 @@ class EducationalTopicsScreen extends StatelessWidget {
               color: Colors.grey.withOpacity(0.08),
               spreadRadius: 1,
               blurRadius: 6,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -165,7 +165,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                 size: 24,
               ),
             ),
-            SizedBox(width: 16),
+            const SizedBox(width: 16),
 
             // Topic Content
             Expanded(
@@ -180,7 +180,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                       color: Colors.grey.shade800,
                     ),
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     topic['description'],
                     style: TextStyle(
@@ -191,13 +191,13 @@ class EducationalTopicsScreen extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   // Topic Meta Info
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
@@ -213,7 +213,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                               size: 12,
                               color: Colors.grey.shade600,
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
                               '${topic['readTime']} min',
                               style: TextStyle(
@@ -225,9 +225,9 @@ class EducationalTopicsScreen extends StatelessWidget {
                           ],
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: 8,
                           vertical: 4,
                         ),
@@ -245,7 +245,7 @@ class EducationalTopicsScreen extends StatelessWidget {
                               size: 12,
                               color: _getDifficultyColor(topic['difficulty']),
                             ),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text(
                               topic['difficulty'],
                               style: TextStyle(

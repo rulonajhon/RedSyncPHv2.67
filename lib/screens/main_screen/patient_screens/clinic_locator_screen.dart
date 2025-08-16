@@ -315,13 +315,13 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
   // Bottom sheet widget for location details
   Widget _buildLocationBottomSheet(Map<String, dynamic> location) {
     return Container(
-      margin: EdgeInsets.all(16),
+      margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,14 +347,14 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     size: 18,
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         location['name'],
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -375,7 +375,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                 ),
                 if (location['distance'] != null)
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _getDistanceColor(
                         location['distance'],
@@ -393,18 +393,18 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _buildInfoRow(FontAwesomeIcons.locationDot, location['address']),
             _buildInfoRow(FontAwesomeIcons.phone, location['contact']),
             _buildInfoRow(FontAwesomeIcons.clock, location['schedule']),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
                     onPressed: () => _createRouteToLocation(location),
-                    icon: Icon(FontAwesomeIcons.route, size: 16),
-                    label: Text('Show Route'),
+                    icon: const Icon(FontAwesomeIcons.route, size: 16),
+                    label: const Text('Show Route'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: selectedType == "clinic"
                           ? Colors.redAccent
@@ -413,22 +413,22 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 ElevatedButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: Icon(FontAwesomeIcons.xmark, size: 16),
-                  label: Text('Close'),
+                  icon: const Icon(FontAwesomeIcons.xmark, size: 16),
+                  label: const Text('Close'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.grey.shade200,
                     foregroundColor: Colors.grey.shade700,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                   ),
                 ),
               ],
@@ -441,12 +441,12 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
   Widget _buildInfoRow(IconData icon, String text) {
     return Padding(
-      padding: EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 14, color: Colors.grey.shade600),
-          SizedBox(width: 12),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               text,
@@ -470,7 +470,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
     if (_currentPosition == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'Current location not available. Please enable location services.',
           ),
@@ -503,7 +503,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         content: Row(
           children: [
             Icon(Icons.route, color: Colors.white),
@@ -561,7 +561,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Access Care Locator',
           style: TextStyle(fontWeight: FontWeight.w600),
         ),
@@ -570,7 +570,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
         elevation: 0,
         actions: [
           Container(
-            margin: EdgeInsets.only(right: 8),
+            margin: const EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
               color: selectedType == "clinic"
                   ? Colors.redAccent.withOpacity(0.1)
@@ -636,7 +636,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
             left: 16,
             right: 16,
             child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
@@ -644,7 +644,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   BoxShadow(
                     color: Colors.black.withOpacity(0.1),
                     blurRadius: 8,
-                    offset: Offset(0, 2),
+                    offset: const Offset(0, 2),
                   ),
                 ],
               ),
@@ -659,13 +659,13 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                         : Colors.blue,
                     size: 16,
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       _getCurrentDataList().isNotEmpty
                           ? '${_getCurrentDataList().length} ${selectedType == "clinic" ? "treatment centers" : "drug outlets"} found'
                           : 'Loading locations...',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                         color: Colors.black87,
@@ -704,7 +704,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -725,7 +725,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     ),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
 
                 // My Location Button
                 Container(
@@ -736,7 +736,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                       BoxShadow(
                         color: Colors.black.withOpacity(0.1),
                         blurRadius: 8,
-                        offset: Offset(0, 2),
+                        offset: const Offset(0, 2),
                       ),
                     ],
                   ),
@@ -751,7 +751,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   ),
                 ),
 
-                Spacer(),
+                const Spacer(),
 
                 // Clear Route Button (if route exists)
                 if (_polylines.isNotEmpty)
@@ -763,7 +763,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                         BoxShadow(
                           color: Colors.black.withOpacity(0.1),
                           blurRadius: 8,
-                          offset: Offset(0, 2),
+                          offset: const Offset(0, 2),
                         ),
                       ],
                     ),
@@ -809,7 +809,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
         maxChildSize: 0.9,
         minChildSize: 0.3,
         builder: (context, scrollController) => Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
           ),
@@ -817,7 +817,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
             children: [
               // Handle
               Container(
-                margin: EdgeInsets.symmetric(vertical: 12),
+                margin: const EdgeInsets.symmetric(vertical: 12),
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
@@ -828,7 +828,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
               // Header
               Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
                     Icon(
@@ -840,13 +840,13 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                           : Colors.blue,
                       size: 20,
                     ),
-                    SizedBox(width: 12),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         selectedType == "clinic"
                             ? 'Treatment Centers'
                             : 'Drug Outlets',
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: Colors.black87,
@@ -870,7 +870,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
               Expanded(
                 child: ListView.builder(
                   controller: scrollController,
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: dataList.length,
                   itemBuilder: (context, index) {
                     final item = dataList[index];
@@ -887,8 +887,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
   Widget _buildLocationListItem(Map<String, dynamic> item) {
     return Container(
-      margin: EdgeInsets.only(bottom: 12),
-      padding: EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(12),
@@ -918,14 +918,14 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   size: 16,
                 ),
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       item['name'],
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                         color: Colors.black87,
@@ -946,7 +946,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
               ),
               if (item['distance'] != null)
                 Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getDistanceColor(item['distance']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -962,7 +962,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                 ),
             ],
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
             item['address'],
             style: TextStyle(
@@ -971,7 +971,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
               height: 1.3,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -980,8 +980,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     Navigator.pop(context);
                     _createRouteToLocation(item);
                   },
-                  icon: Icon(FontAwesomeIcons.route, size: 14),
-                  label: Text('Route'),
+                  icon: const Icon(FontAwesomeIcons.route, size: 14),
+                  label: const Text('Route'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: selectedType == "clinic"
                         ? Colors.redAccent
@@ -990,22 +990,22 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    padding: EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                   ),
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 onPressed: () => _showLocationDetails(item),
-                icon: Icon(FontAwesomeIcons.circleInfo, size: 14),
-                label: Text('Info'),
+                icon: const Icon(FontAwesomeIcons.circleInfo, size: 14),
+                label: const Text('Info'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey.shade200,
                   foregroundColor: Colors.grey.shade700,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 ),
               ),
             ],

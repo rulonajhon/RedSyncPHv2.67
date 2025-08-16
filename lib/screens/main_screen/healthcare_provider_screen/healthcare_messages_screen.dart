@@ -174,7 +174,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
       appBar: AppBar(
         title: Column(
           children: [
-            Text(
+            const Text(
               'Patient Messages',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
@@ -196,40 +196,40 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
               showModalBottomSheet(
                 context: context,
                 builder: (context) => Container(
-                  padding: EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
+                      const Text(
                         'Message Filters',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
                       ListTile(
-                        leading: Icon(
+                        leading: const Icon(
                           FontAwesomeIcons.exclamation,
                           color: Colors.red,
                         ),
-                        title: Text('Urgent Messages'),
+                        title: const Text('Urgent Messages'),
                         onTap: () => Navigator.pop(context),
                       ),
                       ListTile(
-                        leading: Icon(
+                        leading: const Icon(
                           FontAwesomeIcons.clock,
                           color: Colors.orange,
                         ),
-                        title: Text('Recent Messages'),
+                        title: const Text('Recent Messages'),
                         onTap: () => Navigator.pop(context),
                       ),
                       ListTile(
-                        leading: Icon(
+                        leading: const Icon(
                           FontAwesomeIcons.envelope,
                           color: Colors.blue,
                         ),
-                        title: Text('Unread Messages'),
+                        title: const Text('Unread Messages'),
                         onTap: () => Navigator.pop(context),
                       ),
                     ],
@@ -237,7 +237,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                 ),
               );
             },
-            icon: Icon(FontAwesomeIcons.filter, size: 20),
+            icon: const Icon(FontAwesomeIcons.filter, size: 20),
           ),
         ],
       ),
@@ -245,7 +245,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
         children: [
           // Search Bar
           Container(
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
             color: Colors.grey.shade50,
             child: Container(
               decoration: BoxDecoration(
@@ -265,7 +265,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                     size: 18,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.all(16),
+                  contentPadding: const EdgeInsets.all(16),
                 ),
               ),
             ),
@@ -278,8 +278,8 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: Colors.redAccent),
-                        SizedBox(height: 16),
+                        const CircularProgressIndicator(color: Colors.redAccent),
+                        const SizedBox(height: 16),
                         Text(
                           'Loading patient messages...',
                           style: TextStyle(
@@ -295,7 +295,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                     color: Colors.redAccent,
                     onRefresh: _loadMessages,
                     child: SingleChildScrollView(
-                      physics: AlwaysScrollableScrollPhysics(),
+                      physics: const AlwaysScrollableScrollPhysics(),
                       child: SizedBox(
                         height: MediaQuery.of(context).size.height * 0.6,
                         child: _buildEmptyState(),
@@ -306,7 +306,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                     color: Colors.redAccent,
                     onRefresh: _loadMessages,
                     child: ListView.builder(
-                      padding: EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
                       itemCount: _filteredMessages.length,
                       itemBuilder: (context, index) {
                         final conversation = _filteredMessages[index];
@@ -338,7 +338,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
               size: 32,
             ),
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Text(
             'No patient messages',
             style: TextStyle(
@@ -347,7 +347,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
               color: Colors.grey.shade600,
             ),
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           Text(
             'Patient conversations will appear here',
             style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
@@ -363,7 +363,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
     final isCaregiver = otherUser['role'] == 'caregiver';
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
         color: isUnread ? Colors.red.shade50 : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -372,7 +372,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
         ),
       ),
       child: ListTile(
-        contentPadding: EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(16),
         leading: Stack(
           children: [
             CircleAvatar(
@@ -438,7 +438,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
               otherUser['role'] == 'caregiver' ? 'Caregiver' : 'Patient',
               style: TextStyle(
@@ -454,7 +454,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
                 otherUser['email'],
                 style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
               ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               conversation['lastMessage'] ?? 'No messages yet',
               style: TextStyle(
@@ -475,7 +475,7 @@ class _HealthcareMessagesScreenState extends State<HealthcareMessagesScreen> {
               color: Colors.grey.shade400,
               size: 14,
             ),
-            if (isUnread) SizedBox(height: 4),
+            if (isUnread) const SizedBox(height: 4),
             if (isUnread)
               Icon(
                 FontAwesomeIcons.exclamation,

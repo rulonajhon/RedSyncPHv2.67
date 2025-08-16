@@ -56,36 +56,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             PageView(
               controller: _controller,
               children: [
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Welcome to RedSyncPH',
                   textSubTitle:
                       'Your all-in-one solution for managing hemophilia care.',
                   imagePath: 'assets/images/app_logo.png',
                 ),
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Easy Health Tracking',
                   textSubTitle:
                       'Log bleeding episodes and medications with just a few steps',
                   imagePath: 'assets/images/Onboard_img_healthTrack.jpg',
                 ),
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Smart Dosage Calculator',
                   textSubTitle:
                       'Get Accurate clotthing factor calculations based on your weight and conditions',
                   imagePath: 'assets/images/Onboard_img_calculator.jpg',
                 ),
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Treatment Reminders',
                   textSubTitle:
                       'Never miss a dose with smart, customizable reminders.',
                   imagePath: 'assets/images/Onboard_img_reminder.jpg',
                 ),
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Locate Healthcare Providers',
                   textSubTitle: 'Find the best healthcare providers near you.',
                   imagePath: 'assets/images/Onboard_img_calculator.jpg',
                 ),
-                OnboardingPanel(
+                const OnboardingPanel(
                   textTitle: 'Learn & Connect',
                   textSubTitle:
                       'Connect with others and learn more about hemophilia.',
@@ -104,8 +104,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       SmoothPageIndicator(
-                        effect: ExpandingDotsEffect(
-                          dotColor: const Color.fromARGB(255, 199, 199, 199),
+                        effect: const ExpandingDotsEffect(
+                          dotColor: Color.fromARGB(255, 199, 199, 199),
                           activeDotColor: Colors.red,
                           dotHeight: 10,
                           dotWidth: 10,
@@ -169,16 +169,16 @@ class OnboardingPanel extends StatelessWidget {
             // Image
             Image.asset(imagePath),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Welcome Text
             Text(
               textTitle,
-              style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
 
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
 
             // Description Text
             Text(

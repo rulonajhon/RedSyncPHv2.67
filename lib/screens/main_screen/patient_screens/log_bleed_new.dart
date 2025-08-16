@@ -151,7 +151,7 @@ class _LogBleedState extends State<LogBleed> {
   void _nextPage() {
     if (_currentPage < 5) {
       _pageController.nextPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
@@ -160,7 +160,7 @@ class _LogBleedState extends State<LogBleed> {
   void _prevPage() {
     if (_currentPage > 0) {
       _pageController.previousPage(
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     }
@@ -191,7 +191,7 @@ class _LogBleedState extends State<LogBleed> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Row(
                 children: [
                   Icon(Icons.check_circle, color: Colors.white),
@@ -236,7 +236,7 @@ class _LogBleedState extends State<LogBleed> {
                 size: 80,
                 color: Colors.redAccent.withOpacity(0.7),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Text(
                 'Date and time have been set to now. Tap to change if needed.',
                 style: TextStyle(
@@ -246,14 +246,14 @@ class _LogBleedState extends State<LogBleed> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
                     child: GestureDetector(
                       onTap: _pickDate,
                       child: Container(
-                        padding: EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
@@ -261,12 +261,12 @@ class _LogBleedState extends State<LogBleed> {
                         ),
                         child: Column(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.calendar_today,
                               color: Colors.redAccent,
                               size: 32,
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               'Date',
                               style: TextStyle(
@@ -274,7 +274,7 @@ class _LogBleedState extends State<LogBleed> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               _dateController.text.isEmpty
                                   ? 'Select Date'
@@ -292,12 +292,12 @@ class _LogBleedState extends State<LogBleed> {
                       ),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: GestureDetector(
                       onTap: _pickTime,
                       child: Container(
-                        padding: EdgeInsets.all(20),
+                        padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
                           borderRadius: BorderRadius.circular(12),
@@ -305,12 +305,12 @@ class _LogBleedState extends State<LogBleed> {
                         ),
                         child: Column(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.access_time,
                               color: Colors.redAccent,
                               size: 32,
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               'Time',
                               style: TextStyle(
@@ -318,7 +318,7 @@ class _LogBleedState extends State<LogBleed> {
                                 color: Colors.grey.shade700,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               _timeController.text.isEmpty
                                   ? 'Select Time'
@@ -363,19 +363,19 @@ class _LogBleedState extends State<LogBleed> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
                 Icon(
                   Icons.accessibility_new,
                   size: 60,
                   color: Colors.redAccent.withOpacity(0.7),
                 ),
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Body Region Grid
                 GridView.builder(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
@@ -396,7 +396,7 @@ class _LogBleedState extends State<LogBleed> {
                         });
                       },
                       child: Container(
-                        padding: EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? Colors.redAccent.withOpacity(0.1)
@@ -419,7 +419,7 @@ class _LogBleedState extends State<LogBleed> {
                                   ? Colors.redAccent
                                   : Colors.grey.shade600,
                             ),
-                            SizedBox(height: 6),
+                            const SizedBox(height: 6),
                             Text(
                               region['name'] as String,
                               style: TextStyle(
@@ -438,13 +438,13 @@ class _LogBleedState extends State<LogBleed> {
                   },
                 ),
 
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
 
                 // Specific Region Selection
                 if (_bodyRegion.isNotEmpty) ...[
                   Container(
                     width: double.infinity,
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
                       color: Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
@@ -461,7 +461,7 @@ class _LogBleedState extends State<LogBleed> {
                             fontSize: 16,
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
 
                         if (!_showSpecificInput) ...[
                           DropdownButtonFormField<String>(
@@ -478,7 +478,7 @@ class _LogBleedState extends State<LogBleed> {
                               ),
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 8,
                               ),
@@ -515,12 +515,12 @@ class _LogBleedState extends State<LogBleed> {
                               ),
                               filled: true,
                               fillColor: Colors.white,
-                              contentPadding: EdgeInsets.symmetric(
+                              contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 8,
                               ),
                               suffixIcon: IconButton(
-                                icon: Icon(Icons.check, color: Colors.green),
+                                icon: const Icon(Icons.check, color: Colors.green),
                                 onPressed: () {
                                   setState(() {
                                     _specificRegion =
@@ -541,9 +541,9 @@ class _LogBleedState extends State<LogBleed> {
 
                         if (_specificRegion.isNotEmpty &&
                             !_showSpecificInput) ...[
-                          SizedBox(height: 8),
+                          const SizedBox(height: 8),
                           Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: 12,
                               vertical: 6,
                             ),
@@ -553,7 +553,7 @@ class _LogBleedState extends State<LogBleed> {
                             ),
                             child: Text(
                               'Selected: $_specificRegion',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.redAccent,
                                 fontWeight: FontWeight.w500,
                                 fontSize: 12,
@@ -566,7 +566,7 @@ class _LogBleedState extends State<LogBleed> {
                   ),
                 ],
 
-                SizedBox(height: 20),
+                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -605,18 +605,18 @@ class _LogBleedState extends State<LogBleed> {
                 size: 80,
                 color: Colors.redAccent.withOpacity(0.7),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               ...severityLevels.map((level) {
                 final isSelected = _severity == level['name'];
 
                 return Container(
                   width: double.infinity,
-                  margin: EdgeInsets.only(bottom: 16),
+                  margin: const EdgeInsets.only(bottom: 16),
                   child: GestureDetector(
                     onTap: () =>
                         setState(() => _severity = level['name'] as String),
                     child: Container(
-                      padding: EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? (level['color'] as Color).withOpacity(0.1)
@@ -638,7 +638,7 @@ class _LogBleedState extends State<LogBleed> {
                                 ? level['color'] as Color
                                 : Colors.grey.shade600,
                           ),
-                          SizedBox(width: 16),
+                          const SizedBox(width: 16),
                           Text(
                             level['name'] as String,
                             style: TextStyle(
@@ -674,7 +674,7 @@ class _LogBleedState extends State<LogBleed> {
                 size: 80,
                 color: Colors.redAccent.withOpacity(0.7),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Text(
                 'Add any additional information about this bleed episode',
                 style: TextStyle(
@@ -684,7 +684,7 @@ class _LogBleedState extends State<LogBleed> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -700,14 +700,14 @@ class _LogBleedState extends State<LogBleed> {
                         'e.g., What were you doing when it happened? Any triggers? Pain level? Treatment taken?',
                     hintStyle: TextStyle(color: Colors.grey.shade500),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.all(16),
+                    contentPadding: const EdgeInsets.all(16),
                   ),
-                  style: TextStyle(fontSize: 16),
+                  style: const TextStyle(fontSize: 16),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               Container(
-                padding: EdgeInsets.all(12),
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.blue.shade50,
                   borderRadius: BorderRadius.circular(8),
@@ -715,8 +715,8 @@ class _LogBleedState extends State<LogBleed> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
-                    SizedBox(width: 8),
+                    const Icon(Icons.lightbulb_outline, color: Colors.blue, size: 20),
+                    const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         'Tip: Include details that might help you and your healthcare provider understand patterns',
@@ -748,7 +748,7 @@ class _LogBleedState extends State<LogBleed> {
                 size: 80,
                 color: Colors.redAccent.withOpacity(0.7),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Container(
                 width: double.infinity,
                 height: 200,
@@ -768,7 +768,7 @@ class _LogBleedState extends State<LogBleed> {
                       size: 48,
                       color: Colors.grey.shade500,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       'No photo selected',
                       style: TextStyle(color: Colors.grey.shade600),
@@ -776,7 +776,7 @@ class _LogBleedState extends State<LogBleed> {
                   ],
                 ),
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               Row(
                 children: [
                   Expanded(
@@ -784,30 +784,30 @@ class _LogBleedState extends State<LogBleed> {
                       onPressed: () {
                         // TODO: Implement camera
                       },
-                      icon: Icon(Icons.camera_alt),
-                      label: Text('Camera'),
+                      icon: const Icon(Icons.camera_alt),
+                      label: const Text('Camera'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.redAccent,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                     ),
                   ),
-                  SizedBox(width: 16),
+                  const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton.icon(
                       onPressed: () {
                         // TODO: Implement gallery
                       },
-                      icon: Icon(Icons.photo_library),
-                      label: Text('Gallery'),
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('Gallery'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.grey.shade600,
                         foregroundColor: Colors.white,
-                        padding: EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -835,10 +835,10 @@ class _LogBleedState extends State<LogBleed> {
                 size: 80,
                 color: Colors.redAccent.withOpacity(0.7),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               Container(
                 width: double.infinity,
-                padding: EdgeInsets.all(24),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade50,
                   borderRadius: BorderRadius.circular(12),
@@ -852,22 +852,22 @@ class _LogBleedState extends State<LogBleed> {
                       _dateController.text,
                       Icons.calendar_today,
                     ),
-                    Divider(height: 24),
+                    const Divider(height: 24),
                     _buildReviewItem(
                       'Time',
                       _timeController.text,
                       Icons.access_time,
                     ),
-                    Divider(height: 24),
+                    const Divider(height: 24),
                     _buildReviewItem(
                       'Body Region',
                       _bodyRegion,
                       Icons.accessibility_new,
                     ),
-                    Divider(height: 24),
+                    const Divider(height: 24),
                     _buildReviewItem('Severity', _severity, Icons.thermostat),
                     if (_notesController.text.trim().isNotEmpty) ...[
-                      Divider(height: 24),
+                      const Divider(height: 24),
                       _buildReviewItem(
                         'Notes',
                         _notesController.text.trim(),
@@ -877,7 +877,7 @@ class _LogBleedState extends State<LogBleed> {
                   ],
                 ),
               ),
-              SizedBox(height: 32),
+              const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -892,7 +892,7 @@ class _LogBleedState extends State<LogBleed> {
                           );
                         },
                   icon: _isSaving
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
@@ -900,12 +900,12 @@ class _LogBleedState extends State<LogBleed> {
                             color: Colors.white,
                           ),
                         )
-                      : Icon(Icons.save),
+                      : const Icon(Icons.save),
                   label: Text(_isSaving ? 'Saving...' : 'Save Bleed Log'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     foregroundColor: Colors.white,
-                    padding: EdgeInsets.symmetric(vertical: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -923,7 +923,7 @@ class _LogBleedState extends State<LogBleed> {
     return Row(
       children: [
         Icon(icon, color: Colors.redAccent, size: 20),
-        SizedBox(width: 12),
+        const SizedBox(width: 12),
         Text(
           '$label: ',
           style: TextStyle(
@@ -950,7 +950,7 @@ class _LogBleedState extends State<LogBleed> {
       appBar: AppBar(
         title: Text(
           _pageTitles[_currentPage],
-          style: TextStyle(fontWeight: FontWeight.w600),
+          style: const TextStyle(fontWeight: FontWeight.w600),
         ),
         backgroundColor: Colors.redAccent,
         foregroundColor: Colors.white,
@@ -961,8 +961,8 @@ class _LogBleedState extends State<LogBleed> {
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
+              padding: const EdgeInsets.all(20),
+              decoration: const BoxDecoration(
                 color: Colors.redAccent,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
@@ -979,18 +979,18 @@ class _LogBleedState extends State<LogBleed> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   LinearProgressIndicator(
                     value: (_currentPage + 1) / 6,
                     backgroundColor: Colors.white.withOpacity(0.3),
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ],
               ),
             ),
             Expanded(
               child: Padding(
-                padding: EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
                 child: PageView(
                   controller: _pageController,
                   onPageChanged: (page) => setState(() => _currentPage = page),
@@ -1006,7 +1006,7 @@ class _LogBleedState extends State<LogBleed> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   if (_currentPage > 0)
@@ -1016,15 +1016,15 @@ class _LogBleedState extends State<LogBleed> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey.shade300,
                           foregroundColor: Colors.grey.shade700,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text('Back'),
+                        child: const Text('Back'),
                       ),
                     ),
-                  if (_currentPage > 0) SizedBox(width: 16),
+                  if (_currentPage > 0) const SizedBox(width: 16),
                   if (_currentPage < 5)
                     Expanded(
                       child: ElevatedButton(
@@ -1032,12 +1032,12 @@ class _LogBleedState extends State<LogBleed> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
                           foregroundColor: Colors.white,
-                          padding: EdgeInsets.symmetric(vertical: 16),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: Text('Next'),
+                        child: const Text('Next'),
                       ),
                     ),
                 ],
