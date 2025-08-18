@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hemophilia_manager/services/firestore.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -100,8 +101,9 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
 
       // Load all data in parallel for better performance
       // Get more records to ensure we have enough for calculations and display
+      // Use force refresh to ensure we get the latest data from server
       final results = await Future.wait([
-        _firestoreService.getBleedLogs(user.uid, limit: 20),
+        _firestoreService.getBleedLogs(user.uid, limit: 20, forceRefresh: true),
         _firestoreService.getDosageCalculationHistory(user.uid, limit: 20),
         _firestoreService.getInfusionLogs(user.uid),
       ]);
@@ -155,6 +157,14 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
       // Take only the 5 most recent activities
       _recentActivities = allActivities.take(5).toList();
 
+      print('=== RECENT ACTIVITIES DEBUG ===');
+      print('Recent activities count: ${_recentActivities.length}');
+      for (int i = 0; i < _recentActivities.length; i++) {
+        final activity = _recentActivities[i];
+        print('Activity $i: ${activity['activityType']} - date: ${activity['date']} - timestamp: ${activity['timestamp']}');
+      }
+      print('=== END RECENT ACTIVITIES DEBUG ===');
+
       // Calculate counts efficiently using the same data
       _calculateCounts(bleeds, infusionLogs);
 
@@ -167,22 +177,60 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
   void _calculateCounts(
       List<Map<String, dynamic>> bleeds, List<Map<String, dynamic>> infusions) {
     final now = DateTime.now();
+    
+    print('=== CALCULATE COUNTS DEBUG ===');
+    print('Total bleeds: ${bleeds.length}');
+    print('Total infusions: ${infusions.length}');
+    print('Current date: ${now.toString()}');
 
     // Calculate monthly activities (bleeds + infusions from current month)
     final currentMonthBleeds = bleeds.where((bleed) {
       try {
-        final bleedDate = DateTime.parse(bleed['date'] ?? '');
-        return bleedDate.year == now.year && bleedDate.month == now.month;
+        // Try using createdAt timestamp first (more reliable)
+        final createdAt = bleed['createdAt'];
+        DateTime bleedDate;
+        
+        if (createdAt != null) {
+          bleedDate = _timestampToDateTime(createdAt);
+          print('Processing bleed with createdAt: $bleedDate');
+        } else {
+          // Fallback to date string with multiple format support
+          final dateStr = bleed['date'] ?? '';
+          print('Processing bleed date: "$dateStr" (fallback)');
+          if (dateStr.isEmpty) {
+            print('  -> Empty date string, skipping');
+            return false;
+          }
+          bleedDate = _parseFlexibleDate(dateStr);
+        }
+        
+        final isCurrentMonth = bleedDate.year == now.year && bleedDate.month == now.month;
+        print('  -> Parsed date: $bleedDate, Is current month: $isCurrentMonth');
+        return isCurrentMonth;
       } catch (e) {
+        print('  -> Error parsing date: $e');
         return false;
       }
     }).length;
 
     final currentMonthInfusions = infusions.where((infusion) {
       try {
-        final infusionDate = DateTime.parse(infusion['date'] ?? '');
+        // Try using createdAt timestamp first (more reliable)
+        final createdAt = infusion['createdAt'];
+        DateTime infusionDate;
+        
+        if (createdAt != null) {
+          infusionDate = _timestampToDateTime(createdAt);
+        } else {
+          // Fallback to date string with multiple format support
+          final dateStr = infusion['date'] ?? '';
+          if (dateStr.isEmpty) return false;
+          infusionDate = _parseFlexibleDate(dateStr);
+        }
+        
         return infusionDate.year == now.year && infusionDate.month == now.month;
       } catch (e) {
+        print('Error parsing infusion date: $e');
         return false;
       }
     }).length;
@@ -191,14 +239,29 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final startOfWeekDate =
         DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
+    
+    print('Week calculation - Start of week: $startOfWeekDate');
 
     final currentWeekInfusions = infusions.where((infusion) {
       try {
-        final infusionDate = DateTime.parse(infusion['date'] ?? '');
+        // Try using createdAt timestamp first (more reliable)
+        final createdAt = infusion['createdAt'];
+        DateTime infusionDate;
+        
+        if (createdAt != null) {
+          infusionDate = _timestampToDateTime(createdAt);
+        } else {
+          // Fallback to date string with multiple format support
+          final dateStr = infusion['date'] ?? '';
+          if (dateStr.isEmpty) return false;
+          infusionDate = _parseFlexibleDate(dateStr);
+        }
+        
         return infusionDate
                 .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
             infusionDate.isBefore(now.add(const Duration(days: 1)));
       } catch (e) {
+        print('Error parsing infusion date for week: $e');
         return false;
       }
     }).length;
@@ -206,11 +269,31 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     // Calculate weekly bleeds (bleeds from current week)
     final currentWeekBleeds = bleeds.where((bleed) {
       try {
-        final bleedDate = DateTime.parse(bleed['date'] ?? '');
-        return bleedDate
+        // Try using createdAt timestamp first (more reliable)
+        final createdAt = bleed['createdAt'];
+        DateTime bleedDate;
+        
+        if (createdAt != null) {
+          bleedDate = _timestampToDateTime(createdAt);
+          print('Processing bleed for weekly count with createdAt: $bleedDate');
+        } else {
+          // Fallback to date string with multiple format support
+          final dateStr = bleed['date'] ?? '';
+          print('Processing bleed for weekly count: "$dateStr" (fallback)');
+          if (dateStr.isEmpty) {
+            print('  -> Empty date string for weekly, skipping');
+            return false;
+          }
+          bleedDate = _parseFlexibleDate(dateStr);
+        }
+        
+        final isCurrentWeek = bleedDate
                 .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
             bleedDate.isBefore(now.add(const Duration(days: 1)));
+        print('  -> Parsed date: $bleedDate, Is current week: $isCurrentWeek');
+        return isCurrentWeek;
       } catch (e) {
+        print('  -> Error parsing bleed date for week: $e');
         return false;
       }
     }).length;
@@ -220,8 +303,68 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     _weeklyInfusionsCount = currentWeekInfusions;
     _weeklyBleedsCount = currentWeekBleeds;
 
-    print(
-        'Counts - Monthly: $_monthlyActivitiesCount, Weekly infusions: $_weeklyInfusionsCount, Weekly bleeds: $_weeklyBleedsCount');
+    print('FINAL COUNTS:');
+    print('  Monthly activities: $_monthlyActivitiesCount (bleeds: $currentMonthBleeds + infusions: $currentMonthInfusions)');
+    print('  Weekly infusions: $_weeklyInfusionsCount');
+    print('  Weekly bleeds: $_weeklyBleedsCount');
+    print('=== END CALCULATE COUNTS DEBUG ===');
+  }
+
+  // Helper method to convert Firestore timestamp to DateTime
+  DateTime _timestampToDateTime(dynamic timestamp) {
+    if (timestamp == null) throw Exception('Timestamp is null');
+
+    // If it's already a DateTime
+    if (timestamp is DateTime) {
+      return timestamp;
+    }
+
+    // If it's a Firestore Timestamp
+    if (timestamp.runtimeType.toString() == 'Timestamp') {
+      return (timestamp as dynamic).toDate();
+    }
+
+    // If it's milliseconds since epoch
+    if (timestamp is int) {
+      return DateTime.fromMillisecondsSinceEpoch(timestamp);
+    }
+
+    throw Exception('Unknown timestamp type: ${timestamp.runtimeType}');
+  }
+
+  // Helper method to parse date strings in various formats
+  DateTime _parseFlexibleDate(String dateStr) {
+    if (dateStr.isEmpty) {
+      throw Exception('Empty date string');
+    }
+
+    // Try common date formats
+    final formats = [
+      'yyyy-MM-dd',          // 2025-08-15
+      'MMM dd, yyyy',        // Aug 15, 2025
+      'MMM d, yyyy',         // Aug 5, 2025 
+      'MMMM dd, yyyy',       // August 15, 2025
+      'MMMM d, yyyy',        // August 5, 2025
+      'dd/MM/yyyy',          // 15/08/2025
+      'MM/dd/yyyy',          // 08/15/2025
+      'dd-MM-yyyy',          // 15-08-2025
+      'MM-dd-yyyy',          // 08-15-2025
+    ];
+
+    for (String format in formats) {
+      try {
+        return DateFormat(format).parse(dateStr);
+      } catch (e) {
+        // Continue to next format
+      }
+    }
+
+    // If all formats fail, try the default DateTime.parse
+    try {
+      return DateTime.parse(dateStr);
+    } catch (e) {
+      throw Exception('Unable to parse date: "$dateStr". Tried formats: ${formats.join(", ")}');
+    }
   }
 
   Future<void> _loadTodaysReminders() async {

@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/firestore.dart';
 import '../../services/community_service.dart';
+import '../../services/post_reports_service.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   final Function(int) onTabChanged;
@@ -17,6 +18,7 @@ class AdminHomeScreen extends StatefulWidget {
 class _AdminHomeScreenState extends State<AdminHomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   final CommunityService _communityService = CommunityService();
+  final PostReportsService _reportsService = PostReportsService();
   String _adminName = 'Administrator';
 
   @override
@@ -176,20 +178,19 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ),
         const SizedBox(width: 16),
         Expanded(
-          child: StreamBuilder<QuerySnapshot>(
-            stream: FirebaseFirestore.instance
-                .collection('users')
-                .where('role', isEqualTo: 'medical')
-                .where('verificationStatus', isEqualTo: 'approved')
-                .snapshots(),
+          child: StreamBuilder<int>(
+            stream: _reportsService.getPendingReportsCount(),
             builder: (context, snapshot) {
-              final verifiedCount =
-                  snapshot.hasData ? snapshot.data!.docs.length : 0;
+              final pendingCount = snapshot.hasData ? snapshot.data! : 0;
               return _buildStatContainer(
-                icon: FontAwesomeIcons.userCheck,
-                value: '$verifiedCount',
-                label: 'Verified Doctors',
-                color: Colors.green,
+                icon: FontAwesomeIcons.flag,
+                value: '$pendingCount',
+                label: 'Pending Reports',
+                color: Colors.orange,
+                onTap: () {
+                  // Navigate to Reports tab when tapped
+                  widget.onTabChanged(2); // Reports is at index 2
+                },
               );
             },
           ),
@@ -222,8 +223,9 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
     required String value,
     required String label,
     required Color color,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    Widget container = Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
@@ -255,6 +257,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         ],
       ),
     );
+    
+    if (onTap != null) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: container,
+      );
+    }
+    return container;
   }
 
   Widget _buildRecentRequests() {

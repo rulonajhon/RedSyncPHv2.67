@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/community_service.dart';
 import '../../services/admin_notification_service.dart';
+import '../../services/post_reports_service.dart';
 import 'admin_notifications_screen.dart';
 import 'admin_home_screen.dart';
 import 'admin_approvals_screen.dart';
 import 'admin_events_screen.dart';
+import 'admin_post_reports_screen.dart';
 
 class AdminDashboard extends StatefulWidget {
   const AdminDashboard({super.key});
@@ -29,7 +31,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       vsync: this,
     );
     _bottomTabController = TabController(
-      length: 3,
+      length: 4,
       vsync: this,
       initialIndex: 0,
     );
@@ -225,6 +227,10 @@ class _AdminDashboardState extends State<AdminDashboard>
                 text: 'Approvals',
               ),
               Tab(
+                icon: Icon(Icons.flag, size: 24),
+                text: 'Reports',
+              ),
+              Tab(
                 icon: Icon(Icons.event, size: 24),
                 text: 'Events',
               ),
@@ -276,6 +282,8 @@ class _AdminDashboardState extends State<AdminDashboard>
       case 1:
         return const AdminApprovalsScreen();
       case 2:
+        return const AdminPostReportsScreen();
+      case 3:
         return const AdminEventsScreen();
       default:
         return AdminHomeScreen(

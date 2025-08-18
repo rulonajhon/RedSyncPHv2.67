@@ -90,13 +90,21 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
   @override
   void initState() {
     super.initState();
-    _initializeLocation();
-    _updateMarkers();
+    try {
+      _initializeLocation();
+      _updateMarkers();
+    } catch (e) {
+      print('Error initializing clinic locator: $e');
+    }
   }
 
   Future<void> _initializeLocation() async {
-    // Try to get location on app start
-    await _getCurrentLocation();
+    try {
+      // Try to get location on app start
+      await _getCurrentLocation();
+    } catch (e) {
+      print('Error initializing location: $e');
+    }
   }
 
   // 📍 Enhanced Current Location Detection
@@ -111,33 +119,39 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
         if (permission == LocationPermission.denied) {
+          print('Location permission denied');
           setState(() {
             _isLoadingLocation = false;
           });
+          _showErrorMessage('Location permission is required to find nearby clinics');
           return;
         }
       }
 
       if (permission == LocationPermission.deniedForever) {
+        print('Location permission denied forever');
         setState(() {
           _isLoadingLocation = false;
         });
+        _showErrorMessage('Please enable location permission in settings');
         return;
       }
 
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
+        print('Location services disabled');
         setState(() {
           _isLoadingLocation = false;
         });
+        _showErrorMessage('Please enable location services');
         return;
       }
 
       // Get current position with high accuracy
       Position position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
-        timeLimit: const Duration(seconds: 10),
+        timeLimit: const Duration(seconds: 15),
       );
 
       setState(() {
@@ -149,10 +163,27 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
       _calculateAllDistances();
       _updateMarkers();
       _centerMapOnUser();
+      
+      print('Location acquired: ${position.latitude}, ${position.longitude}');
+      
     } catch (e) {
+      print('Error getting current location: $e');
       setState(() {
         _isLoadingLocation = false;
       });
+      _showErrorMessage('Unable to get current location: ${e.toString()}');
+    }
+  }
+
+  void _showErrorMessage(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -160,38 +191,61 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
   void _calculateAllDistances() {
     if (_currentPosition == null) return;
 
-    // Calculate distances for clinics
-    for (int i = 0; i < clinics.length; i++) {
-      final clinic = clinics[i];
-      final distance = Geolocator.distanceBetween(
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-        double.parse(clinic['lat']),
-        double.parse(clinic['lng']),
-      );
+    try {
+      // Calculate distances for clinics
+      for (int i = 0; i < clinics.length; i++) {
+        final clinic = clinics[i];
+        try {
+          final lat = double.parse(clinic['lat'] ?? '0');
+          final lng = double.parse(clinic['lng'] ?? '0');
+          
+          final distance = Geolocator.distanceBetween(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+            lat,
+            lng,
+          );
 
-      final distanceKm = distance / 1000;
-      clinics[i]['distance'] = distanceKm.toStringAsFixed(1);
-      clinics[i]['distanceValue'] = distanceKm;
+          final distanceKm = distance / 1000;
+          clinics[i]['distance'] = distanceKm.toStringAsFixed(1);
+          clinics[i]['distanceValue'] = distanceKm;
+        } catch (e) {
+          print('Error parsing coordinates for clinic ${clinic['name']}: $e');
+          clinics[i]['distance'] = 'N/A';
+          clinics[i]['distanceValue'] = double.infinity;
+        }
+      }
+
+      // Calculate distances for drug outlets
+      for (int i = 0; i < drugOutlets.length; i++) {
+        final outlet = drugOutlets[i];
+        try {
+          final lat = double.parse(outlet['lat'] ?? '0');
+          final lng = double.parse(outlet['lng'] ?? '0');
+          
+          final distance = Geolocator.distanceBetween(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+            lat,
+            lng,
+          );
+
+          final distanceKm = distance / 1000;
+          drugOutlets[i]['distance'] = distanceKm.toStringAsFixed(1);
+          drugOutlets[i]['distanceValue'] = distanceKm;
+        } catch (e) {
+          print('Error parsing coordinates for outlet ${outlet['name']}: $e');
+          drugOutlets[i]['distance'] = 'N/A';
+          drugOutlets[i]['distanceValue'] = double.infinity;
+        }
+      }
+
+      // 📊 Smart Sorting by distance
+      _sortLocationsByDistance();
+      
+    } catch (e) {
+      print('Error calculating distances: $e');
     }
-
-    // Calculate distances for drug outlets
-    for (int i = 0; i < drugOutlets.length; i++) {
-      final outlet = drugOutlets[i];
-      final distance = Geolocator.distanceBetween(
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-        double.parse(outlet['lat']),
-        double.parse(outlet['lng']),
-      );
-
-      final distanceKm = distance / 1000;
-      drugOutlets[i]['distance'] = distanceKm.toStringAsFixed(1);
-      drugOutlets[i]['distanceValue'] = distanceKm;
-    }
-
-    // 📊 Smart Sorting by distance
-    _sortLocationsByDistance();
   }
 
   // 📊 Smart Sorting Implementation
@@ -212,89 +266,109 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
     return Colors.red; // Far
   }
 
-  // Get distance status text
-  String _getDistanceStatus(String? distance) {
-    if (distance == null) return 'Unknown';
-
-    double dist = double.tryParse(distance) ?? double.infinity;
-    if (dist <= 2.0) return 'Very Close';
-    if (dist <= 5.0) return 'Moderate';
-    return 'Far';
-  }
-
-  // Get distance icon
-  IconData _getDistanceIcon(String? distance) {
-    if (distance == null) return Icons.help_outline;
-
-    double dist = double.tryParse(distance) ?? double.infinity;
-    if (dist <= 2.0) return Icons.directions_walk;
-    if (dist <= 5.0) return Icons.directions_bike;
-    return Icons.directions_car;
-  }
-
   // 🗺️ Enhanced Marker Updates with User Location
   void _updateMarkers() {
     Set<Marker> markers = {};
 
-    // Add user location marker (Green marker)
-    if (_currentPosition != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId('user_location'),
-          position: LatLng(
-            _currentPosition!.latitude,
-            _currentPosition!.longitude,
+    try {
+      // Add user location marker (Green marker)
+      if (_currentPosition != null) {
+        markers.add(
+          Marker(
+            markerId: const MarkerId('user_location'),
+            position: LatLng(
+              _currentPosition!.latitude,
+              _currentPosition!.longitude,
+            ),
+            infoWindow: const InfoWindow(
+              title: '📍 Your Location',
+              snippet: 'You are here',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+              BitmapDescriptor.hueGreen,
+            ),
           ),
-          infoWindow: const InfoWindow(
-            title: '📍 Your Location',
-            snippet: 'You are here',
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueGreen,
-          ),
+        );
+      }
+
+      // Add location markers based on selected type
+      final currentData = _getCurrentDataList();
+      for (var location in currentData) {
+        try {
+          // Safely parse coordinates with validation
+          final latStr = location['lat'];
+          final lngStr = location['lng'];
+          final name = location['name'] ?? 'Unknown Location';
+
+          if (latStr == null || lngStr == null || latStr.isEmpty || lngStr.isEmpty) {
+            print('Skipping location $name: Missing coordinates');
+            continue;
+          }
+
+          final lat = double.tryParse(latStr);
+          final lng = double.tryParse(lngStr);
+
+          if (lat == null || lng == null) {
+            print('Skipping location $name: Invalid coordinates ($latStr, $lngStr)');
+            continue;
+          }
+
+          // Validate coordinate ranges
+          if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+            print('Skipping location $name: Coordinates out of range ($lat, $lng)');
+            continue;
+          }
+
+          markers.add(
+            Marker(
+              markerId: MarkerId(name),
+              position: LatLng(lat, lng),
+              infoWindow: InfoWindow(
+                title: name,
+                snippet: location['distance'] != null
+                    ? '${location['distance']} km • ${location['type'] ?? 'Location'}'
+                    : location['type'] ?? 'Location',
+              ),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                selectedType == "clinic"
+                    ? BitmapDescriptor.hueRed
+                    : BitmapDescriptor.hueBlue,
+              ),
+              onTap: () => _showLocationDetails(location),
+            ),
+          );
+        } catch (e) {
+          print('Error adding marker for ${location['name']}: $e');
+        }
+      }
+
+      setState(() {
+        _markers = markers;
+      });
+    } catch (e) {
+      print('Error updating markers: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating map markers: ${e.toString()}'),
+          backgroundColor: Colors.red,
         ),
       );
     }
-
-    // Add location markers based on selected type
-    final currentData = _getCurrentDataList();
-    for (var location in currentData) {
-      markers.add(
-        Marker(
-          markerId: MarkerId(location['name']!),
-          position: LatLng(
-            double.parse(location['lat']!),
-            double.parse(location['lng']!),
-          ),
-          infoWindow: InfoWindow(
-            title: location['name'],
-            snippet: location['distance'] != null
-                ? '${location['distance']} km • ${location['type']}'
-                : location['type'],
-          ),
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            selectedType == "clinic"
-                ? BitmapDescriptor.hueRed
-                : BitmapDescriptor.hueBlue,
-          ),
-          onTap: () => _showLocationDetails(location),
-        ),
-      );
-    }
-
-    setState(() {
-      _markers = markers;
-    });
   }
 
   // Center map on user location
   void _centerMapOnUser() {
-    if (_mapController != null && _currentPosition != null) {
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-        ),
-      );
+    try {
+      if (_mapController != null && _currentPosition != null) {
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLng(
+            LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error centering map on user: $e');
+      // Don't show snackbar for this error as it's not critical
     }
   }
 
@@ -618,9 +692,19 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
             markers: _markers,
             polylines: _polylines,
             onMapCreated: (controller) {
-              _mapController = controller;
-              if (_currentPosition != null) {
-                _centerMapOnUser();
+              try {
+                _mapController = controller;
+                if (_currentPosition != null) {
+                  _centerMapOnUser();
+                }
+              } catch (e) {
+                print('Error initializing map controller: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Map initialization error: ${e.toString()}'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
               }
             },
             myLocationEnabled: false,

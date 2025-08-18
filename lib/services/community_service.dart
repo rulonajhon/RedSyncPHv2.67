@@ -399,13 +399,41 @@ class CommunityService {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return;
 
+    // Get post details
+    final postDoc =
+        await _firestore.collection('community_posts').doc(postId).get();
+    if (!postDoc.exists) return;
+
+    final postData = postDoc.data()!;
+    final reporterData = await _getUserData(currentUser.uid);
+    final authorData = await _getUserData(postData['authorId']);
+
     await _firestore.collection('post_reports').add({
       'postId': postId,
+      'postContent': postData['content'],
+      'postAuthorId': postData['authorId'],
+      'postAuthorName': authorData['name'],
+      'postTimestamp': postData['timestamp'],
       'reporterId': currentUser.uid,
+      'reporterName': reporterData['name'],
       'reason': reason,
       'timestamp': FieldValue.serverTimestamp(),
       'status': 'pending',
+      'reviewedBy': null,
+      'reviewedAt': null,
+      'adminNotes': '',
     });
+
+    // Create admin notification
+    await AdminNotificationService.createAdminNotification(
+      title: 'New Post Report',
+      message: 'A post has been reported for: $reason',
+      type: 'post_report',
+      data: {
+        'postId': postId,
+        'reportReason': reason,
+      },
+    );
   }
 
   // Get user data by ID

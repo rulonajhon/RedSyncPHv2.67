@@ -602,23 +602,32 @@ class FirestoreService {
   Future<List<Map<String, dynamic>>> getBleedLogs(
     String uid, {
     int limit = 50,
+    bool forceRefresh = false,
   }) async {
     try {
-      final querySnapshot = await _db
+      Query query = _db
           .collection('bleed_logs')
           .where('uid', isEqualTo: uid)
-          .limit(limit)
-          .get();
+          .limit(limit);
 
-      // Sort the results locally by createdAt timestamp
+      final QuerySnapshot querySnapshot;
+      if (forceRefresh) {
+        // Force server fetch to bypass cache
+        querySnapshot = await query.get(const GetOptions(source: Source.server));
+      } else {
+        querySnapshot = await query.get();
+      }
+
+      // Convert to list with document IDs and sort locally by createdAt
       final docs = querySnapshot.docs
-          .map((doc) => {'id': doc.id, ...doc.data()})
+          .map((doc) => <String, dynamic>{'id': doc.id, ...?doc.data() as Map<String, dynamic>?})
           .toList();
 
+      // Sort locally by createdAt timestamp (most recent first)
       docs.sort((a, b) {
-        final aTime = a['createdAt']?.millisecondsSinceEpoch ?? 0;
-        final bTime = b['createdAt']?.millisecondsSinceEpoch ?? 0;
-        return bTime.compareTo(aTime); // Descending order (newest first)
+        final aTime = _extractTimestampValue(a['createdAt']) ?? 0;
+        final bTime = _extractTimestampValue(b['createdAt']) ?? 0;
+        return bTime.compareTo(aTime);
       });
 
       return docs;
@@ -628,13 +637,34 @@ class FirestoreService {
     }
   }
 
+  // Helper method to extract timestamp value from various Firestore timestamp formats
+  int? _extractTimestampValue(dynamic timestamp) {
+    if (timestamp == null) return null;
+
+    // If it's already a DateTime
+    if (timestamp is DateTime) {
+      return timestamp.millisecondsSinceEpoch;
+    }
+
+    // If it's a Firestore Timestamp
+    if (timestamp.runtimeType.toString() == 'Timestamp') {
+      return (timestamp as dynamic).toDate().millisecondsSinceEpoch;
+    }
+
+    // If it's already milliseconds
+    if (timestamp is int) {
+      return timestamp;
+    }
+
+    return null;
+  }
+
   // Get bleed logs stream for real-time updates
   Stream<QuerySnapshot> getBleedLogsStream(String uid, {int limit = 20}) {
     try {
       return _db
           .collection('bleed_logs')
           .where('uid', isEqualTo: uid)
-          .orderBy('createdAt', descending: true)
           .limit(limit)
           .snapshots();
     } catch (e) {

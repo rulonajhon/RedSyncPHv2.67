@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../services/community_service.dart';
 import 'post_detail_screen.dart';
+import 'create_post_sheet.dart';
 
 class CommunityFeedTab extends StatefulWidget {
   final CommunityService communityService;
@@ -29,176 +30,18 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
 
   @override
   Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: _refreshFeed,
-      child: Column(
-        children: [
-          _buildCreatePostBox(),
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: _postsStream,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            color: Colors.redAccent,
-                            strokeWidth: 2.5,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Loading community posts...',
-                          style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 16),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.orange.shade50,
-                              borderRadius: BorderRadius.circular(40),
-                            ),
-                            child: Icon(
-                              FontAwesomeIcons.triangleExclamation,
-                              size: 32,
-                              color: Colors.orange.shade400,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Error loading posts',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey.shade700,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Please check your connection and try again',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 14,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 24),
-                          ElevatedButton(
-                            onPressed: () {
-                              setState(() {
-                                _postsStream =
-                                    widget.communityService.getPostsStream();
-                              });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.redAccent,
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                            child: const Text('Retry'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }
-
-                final posts = snapshot.data ?? [];
-
-                if (posts.isEmpty) {
-                  return _buildEmptyFeedState();
-                }
-
-                return ListView.separated(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: posts.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 16),
-                  itemBuilder: (context, index) {
-                    return _buildPostItem(posts[index]);
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreatePostBox() {
-    final TextEditingController postController = TextEditingController();
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.08),
-            spreadRadius: 1,
-            blurRadius: 6,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 22,
-                backgroundColor: Colors.redAccent.withOpacity(0.1),
-                child: const Icon(FontAwesomeIcons.user,
-                    color: Colors.redAccent, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: TextField(
-                  controller: postController,
-                  minLines: 1,
-                  maxLines: 4,
-                  decoration: InputDecoration(
-                    hintText: "What's on your mind?",
-                    border: InputBorder.none,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: () async {
-                if (postController.text.trim().isNotEmpty) {
-                  try {
-                    await widget.communityService.createPost(
-                      content: postController.text.trim(),
-                    );
-                    postController.clear();
+    return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          showModalBottomSheet(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => CreatePostSheet(
+              onPost: (String content) async {
+                try {
+                  await widget.communityService.createPost(content: content);
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Post created successfully!'),
@@ -206,7 +49,10 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                         duration: Duration(seconds: 2),
                       ),
                     );
-                  } catch (e) {
+                  }
+                  setState(() {});
+                } catch (e) {
+                  if (mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text('Error creating post: $e'),
@@ -217,24 +63,123 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
                   }
                 }
               },
-              icon: const Icon(FontAwesomeIcons.plus, size: 16),
-              label: const Text('Post'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                elevation: 0,
-              ),
             ),
-          ),
-        ],
+          );
+        },
+        backgroundColor: Colors.redAccent,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _refreshFeed,
+        child: StreamBuilder<List<Map<String, dynamic>>>(
+          stream: _postsStream,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        color: Colors.redAccent,
+                        strokeWidth: 2.5,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Loading community posts...',
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            if (snapshot.hasError) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(32),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade50,
+                          borderRadius: BorderRadius.circular(40),
+                        ),
+                        child: Icon(
+                          FontAwesomeIcons.triangleExclamation,
+                          size: 32,
+                          color: Colors.orange.shade400,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'Error loading posts',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Please check your connection and try again',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _postsStream =
+                                widget.communityService.getPostsStream();
+                          });
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            final posts = snapshot.data ?? [];
+
+            if (posts.isEmpty) {
+              return _buildEmptyFeedState();
+            }
+
+            return ListView.separated(
+              padding: const EdgeInsets.all(20),
+              itemCount: posts.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 16),
+              itemBuilder: (context, index) {
+                return _buildPostItem(posts[index]);
+              },
+            );
+          },
+        ),
       ),
     );
   }
+
+  // Removed _buildCreatePostBox, replaced with FAB and CreatePostSheet
 
   Widget _buildEmptyFeedState() {
     return Center(
