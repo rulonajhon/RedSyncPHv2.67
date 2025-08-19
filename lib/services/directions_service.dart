@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:hemophilia_manager/config/app_config.dart';
 
 enum TravelMode { driving, walking, bicycling, transit, motorcycle }
 
@@ -24,7 +25,9 @@ class RouteInfo {
 
 class DirectionsService {
   static const String _baseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
-  static const String _apiKey = 'AIzaSyACs7QdWeo6T65-_znx83BvjoVIEI7GGiI'; // Your API key
+  
+  // Use environment variable instead of hardcoded API key
+  String get _apiKey => AppConfig.googleMapsApiKey;
 
   Future<RouteInfo?> getDirections({
     required LatLng origin,

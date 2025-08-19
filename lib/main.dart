@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hemophilia_manager/routes/routes.dart';
 import 'package:hemophilia_manager/screens/registration/authentication_landing_screen.dart';
 import 'package:hemophilia_manager/screens/onboarding/onboarding_screen.dart';
@@ -17,6 +18,10 @@ final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load environment variables
+  await dotenv.load(fileName: ".env");
+  
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize OpenAI service

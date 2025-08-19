@@ -11,11 +11,14 @@
 .svn/
 .swiftpm/
 .env
+.env.*
+!.env.example
 migrate_working_dir/
 
 # Configuration files with sensitive data
 ios/Runner/Config.plist
 android/secrets.properties
+lib/config/api_keys.dart
 
 # IntelliJ related
 *.iml
