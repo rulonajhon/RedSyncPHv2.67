@@ -31,7 +31,8 @@ class DirectionsService {
   String get _apiKey {
     try {
       final key = AppConfig.googleMapsApiKey;
-      print('🔑 API Key retrieved: ${key.substring(0, 10)}...${key.substring(key.length - 4)}');
+      print(
+          '🔑 API Key retrieved: ${key.substring(0, 10)}...${key.substring(key.length - 4)}');
       return key;
     } catch (e) {
       print('❌ Failed to get API key from environment: $e');
@@ -51,8 +52,9 @@ class DirectionsService {
       // Debug: Check if API key is loaded
       print('🔑 DirectionsService: Attempting to load API key...');
       final apiKey = _apiKey;
-      print('🔑 DirectionsService: API key loaded successfully (${apiKey.substring(0, 10)}...)');
-      
+      print(
+          '🔑 DirectionsService: API key loaded successfully (${apiKey.substring(0, 10)}...)');
+
       final String url = '$_baseUrl?'
           'origin=${origin.latitude},${origin.longitude}&'
           'destination=${destination.latitude},${destination.longitude}&'
@@ -63,7 +65,7 @@ class DirectionsService {
 
       final response = await http.get(Uri.parse(url));
       print('📡 Directions API Response Status: ${response.statusCode}');
-      
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         print('📋 Directions API Status: ${data['status']}');
@@ -71,8 +73,9 @@ class DirectionsService {
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
           final leg = route['legs'][0];
-          
-          print('✅ Route found! Distance: ${leg['distance']['text']}, Duration: ${leg['duration']['text']}');
+
+          print(
+              '✅ Route found! Distance: ${leg['distance']['text']}, Duration: ${leg['duration']['text']}');
 
           // Get polyline points
           final polylinePoints = <LatLng>[];
@@ -85,7 +88,7 @@ class DirectionsService {
             for (var point in decodedPoints) {
               polylinePoints.add(LatLng(point.latitude, point.longitude));
             }
-            
+
             print('🗺️ Polyline decoded: ${polylinePoints.length} points');
           }
 
@@ -143,8 +146,9 @@ class DirectionsService {
 
   RouteInfo _createFallbackRoute(
       LatLng origin, LatLng destination, TravelMode travelMode) {
-    print('🚨 Creating FALLBACK route (straight line) - API failed or no polyline data');
-    
+    print(
+        '🚨 Creating FALLBACK route (straight line) - API failed or no polyline data');
+
     // Calculate straight-line distance using Haversine formula
     final distance = _calculateDistance(origin, destination);
 

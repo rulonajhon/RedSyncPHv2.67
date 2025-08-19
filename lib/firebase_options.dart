@@ -54,10 +54,10 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: AppConfig.firebaseApiKey,
-    appId: AppConfig.firebaseAppId,
-    messagingSenderId: AppConfig.firebaseMessagingSenderId,
-    projectId: AppConfig.firebaseProjectId,
-    storageBucket: AppConfig.firebaseStorageBucket,
-  );
+        apiKey: AppConfig.firebaseApiKey,
+        appId: AppConfig.firebaseAppId,
+        messagingSenderId: AppConfig.firebaseMessagingSenderId,
+        projectId: AppConfig.firebaseProjectId,
+        storageBucket: AppConfig.firebaseStorageBucket,
+      );
 }

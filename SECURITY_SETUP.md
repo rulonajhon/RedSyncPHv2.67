@@ -15,6 +15,9 @@ This project now uses environment variables to protect sensitive API keys from b
 
 2. **Edit the `.env` file with your actual API keys:**
    ```
+   # OpenAI API Key for Chatbot
+   OPENAI_API_KEY=sk-proj-your_actual_openai_api_key_here
+   
    # Google Maps API Key for Directions
    GOOGLE_MAPS_API_KEY=your_actual_google_maps_api_key_here
    
@@ -27,6 +30,14 @@ This project now uses environment variables to protect sensitive API keys from b
    ```
 
 ### 2. Required API Keys
+
+#### 🤖 OpenAI API Key (for Chatbot)
+- Go to [OpenAI Platform](https://platform.openai.com)
+- Create account and verify phone number
+- Generate API key from "View API keys" section
+- **Important**: Add billing information (required for API usage)
+- Add to your `.env` file
+- See `OPENAI_SETUP.md` for detailed instructions
 
 #### 🗺️ Google Maps API Key
 - Go to [Google Cloud Console](https://console.cloud.google.com/)
