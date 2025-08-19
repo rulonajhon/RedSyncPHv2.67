@@ -613,14 +613,18 @@ class FirestoreService {
       final QuerySnapshot querySnapshot;
       if (forceRefresh) {
         // Force server fetch to bypass cache
-        querySnapshot = await query.get(const GetOptions(source: Source.server));
+        querySnapshot =
+            await query.get(const GetOptions(source: Source.server));
       } else {
         querySnapshot = await query.get();
       }
 
       // Convert to list with document IDs and sort locally by createdAt
       final docs = querySnapshot.docs
-          .map((doc) => <String, dynamic>{'id': doc.id, ...?doc.data() as Map<String, dynamic>?})
+          .map((doc) => <String, dynamic>{
+                'id': doc.id,
+                ...?doc.data() as Map<String, dynamic>?
+              })
           .toList();
 
       // Sort locally by createdAt timestamp (most recent first)

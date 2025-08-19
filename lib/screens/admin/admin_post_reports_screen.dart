@@ -98,11 +98,12 @@ class _AdminPostReportsScreenState extends State<AdminPostReportsScreen>
           print('Reports count: ${snapshot.data?.length ?? 0}');
           for (var i = 0; i < (snapshot.data?.length ?? 0); i++) {
             final report = snapshot.data![i];
-            print('Report $i: postId=${report['postId']}, status=${report['status']}, reason=${report['reason']}');
+            print(
+                'Report $i: postId=${report['postId']}, status=${report['status']}, reason=${report['reason']}');
           }
         }
         print('=== END POST REPORTS DEBUG ($filter) ===');
-        
+
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(
             child: CircularProgressIndicator(color: Colors.redAccent),

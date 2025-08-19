@@ -9,7 +9,7 @@ Future<void> main() async {
 
   try {
     final firestore = FirebaseFirestore.instance;
-    
+
     // Create a test post report
     await firestore.collection('post_reports').add({
       'postId': 'test-post-123',
@@ -27,7 +27,6 @@ Future<void> main() async {
 
     print('✅ Test report created successfully!');
     print('Now check the Admin Dashboard > Reports tab');
-    
   } catch (e) {
     print('❌ Error creating test report: $e');
   }

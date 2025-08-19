@@ -13,10 +13,12 @@ class PostReportsService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      print('PostReportsService: Received ${snapshot.docs.length} post reports from Firestore');
+      print(
+          'PostReportsService: Received ${snapshot.docs.length} post reports from Firestore');
       for (var doc in snapshot.docs) {
         final data = doc.data();
-        print('PostReport: ${doc.id} - postId: ${data['postId']}, status: ${data['status']}, reason: ${data['reason']}');
+        print(
+            'PostReport: ${doc.id} - postId: ${data['postId']}, status: ${data['status']}, reason: ${data['reason']}');
       }
       return snapshot.docs.map((doc) {
         final data = doc.data();
@@ -42,14 +44,16 @@ class PostReportsService {
 
   // Get reports by status
   Stream<List<Map<String, dynamic>>> getReportsByStatus(String status) {
-    print('PostReportsService: Starting to stream post reports with status: $status');
+    print(
+        'PostReportsService: Starting to stream post reports with status: $status');
     return _firestore
         .collection('post_reports')
         .where('status', isEqualTo: status)
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      print('PostReportsService: Received ${snapshot.docs.length} post reports with status "$status" from Firestore');
+      print(
+          'PostReportsService: Received ${snapshot.docs.length} post reports with status "$status" from Firestore');
       return snapshot.docs.map((doc) {
         final data = doc.data();
         return {

@@ -161,7 +161,8 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
       print('Recent activities count: ${_recentActivities.length}');
       for (int i = 0; i < _recentActivities.length; i++) {
         final activity = _recentActivities[i];
-        print('Activity $i: ${activity['activityType']} - date: ${activity['date']} - timestamp: ${activity['timestamp']}');
+        print(
+            'Activity $i: ${activity['activityType']} - date: ${activity['date']} - timestamp: ${activity['timestamp']}');
       }
       print('=== END RECENT ACTIVITIES DEBUG ===');
 
@@ -177,7 +178,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
   void _calculateCounts(
       List<Map<String, dynamic>> bleeds, List<Map<String, dynamic>> infusions) {
     final now = DateTime.now();
-    
+
     print('=== CALCULATE COUNTS DEBUG ===');
     print('Total bleeds: ${bleeds.length}');
     print('Total infusions: ${infusions.length}');
@@ -189,7 +190,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
         // Try using createdAt timestamp first (more reliable)
         final createdAt = bleed['createdAt'];
         DateTime bleedDate;
-        
+
         if (createdAt != null) {
           bleedDate = _timestampToDateTime(createdAt);
           print('Processing bleed with createdAt: $bleedDate');
@@ -203,9 +204,11 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
           }
           bleedDate = _parseFlexibleDate(dateStr);
         }
-        
-        final isCurrentMonth = bleedDate.year == now.year && bleedDate.month == now.month;
-        print('  -> Parsed date: $bleedDate, Is current month: $isCurrentMonth');
+
+        final isCurrentMonth =
+            bleedDate.year == now.year && bleedDate.month == now.month;
+        print(
+            '  -> Parsed date: $bleedDate, Is current month: $isCurrentMonth');
         return isCurrentMonth;
       } catch (e) {
         print('  -> Error parsing date: $e');
@@ -218,7 +221,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
         // Try using createdAt timestamp first (more reliable)
         final createdAt = infusion['createdAt'];
         DateTime infusionDate;
-        
+
         if (createdAt != null) {
           infusionDate = _timestampToDateTime(createdAt);
         } else {
@@ -227,7 +230,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
           if (dateStr.isEmpty) return false;
           infusionDate = _parseFlexibleDate(dateStr);
         }
-        
+
         return infusionDate.year == now.year && infusionDate.month == now.month;
       } catch (e) {
         print('Error parsing infusion date: $e');
@@ -239,7 +242,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
     final startOfWeekDate =
         DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day);
-    
+
     print('Week calculation - Start of week: $startOfWeekDate');
 
     final currentWeekInfusions = infusions.where((infusion) {
@@ -247,7 +250,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
         // Try using createdAt timestamp first (more reliable)
         final createdAt = infusion['createdAt'];
         DateTime infusionDate;
-        
+
         if (createdAt != null) {
           infusionDate = _timestampToDateTime(createdAt);
         } else {
@@ -256,7 +259,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
           if (dateStr.isEmpty) return false;
           infusionDate = _parseFlexibleDate(dateStr);
         }
-        
+
         return infusionDate
                 .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
             infusionDate.isBefore(now.add(const Duration(days: 1)));
@@ -272,7 +275,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
         // Try using createdAt timestamp first (more reliable)
         final createdAt = bleed['createdAt'];
         DateTime bleedDate;
-        
+
         if (createdAt != null) {
           bleedDate = _timestampToDateTime(createdAt);
           print('Processing bleed for weekly count with createdAt: $bleedDate');
@@ -286,7 +289,7 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
           }
           bleedDate = _parseFlexibleDate(dateStr);
         }
-        
+
         final isCurrentWeek = bleedDate
                 .isAfter(startOfWeekDate.subtract(const Duration(days: 1))) &&
             bleedDate.isBefore(now.add(const Duration(days: 1)));
@@ -304,7 +307,8 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     _weeklyBleedsCount = currentWeekBleeds;
 
     print('FINAL COUNTS:');
-    print('  Monthly activities: $_monthlyActivitiesCount (bleeds: $currentMonthBleeds + infusions: $currentMonthInfusions)');
+    print(
+        '  Monthly activities: $_monthlyActivitiesCount (bleeds: $currentMonthBleeds + infusions: $currentMonthInfusions)');
     print('  Weekly infusions: $_weeklyInfusionsCount');
     print('  Weekly bleeds: $_weeklyBleedsCount');
     print('=== END CALCULATE COUNTS DEBUG ===');
@@ -340,15 +344,15 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
 
     // Try common date formats
     final formats = [
-      'yyyy-MM-dd',          // 2025-08-15
-      'MMM dd, yyyy',        // Aug 15, 2025
-      'MMM d, yyyy',         // Aug 5, 2025 
-      'MMMM dd, yyyy',       // August 15, 2025
-      'MMMM d, yyyy',        // August 5, 2025
-      'dd/MM/yyyy',          // 15/08/2025
-      'MM/dd/yyyy',          // 08/15/2025
-      'dd-MM-yyyy',          // 15-08-2025
-      'MM-dd-yyyy',          // 08-15-2025
+      'yyyy-MM-dd', // 2025-08-15
+      'MMM dd, yyyy', // Aug 15, 2025
+      'MMM d, yyyy', // Aug 5, 2025
+      'MMMM dd, yyyy', // August 15, 2025
+      'MMMM d, yyyy', // August 5, 2025
+      'dd/MM/yyyy', // 15/08/2025
+      'MM/dd/yyyy', // 08/15/2025
+      'dd-MM-yyyy', // 15-08-2025
+      'MM-dd-yyyy', // 08-15-2025
     ];
 
     for (String format in formats) {
@@ -363,7 +367,8 @@ class _DashboardState extends State<Dashboard> with WidgetsBindingObserver {
     try {
       return DateTime.parse(dateStr);
     } catch (e) {
-      throw Exception('Unable to parse date: "$dateStr". Tried formats: ${formats.join(", ")}');
+      throw Exception(
+          'Unable to parse date: "$dateStr". Tried formats: ${formats.join(", ")}');
     }
   }
 

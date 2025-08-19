@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
+import '../../../services/directions_service.dart';
 
 class ClinicLocatorScreen extends StatefulWidget {
   const ClinicLocatorScreen({super.key});
@@ -19,6 +20,10 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
   final Set<Polyline> _polylines = {};
   Map<String, dynamic>? _selectedLocation;
+  final DirectionsService _directionsService = DirectionsService();
+  TravelMode _selectedTravelMode = TravelMode.driving;
+  RouteInfo? _currentRoute;
+  bool _isLoadingRoute = false;
 
   // Enhanced clinics data with distance calculation support
   List<Map<String, dynamic>> clinics = [
@@ -123,7 +128,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
           setState(() {
             _isLoadingLocation = false;
           });
-          _showErrorMessage('Location permission is required to find nearby clinics');
+          _showErrorMessage(
+              'Location permission is required to find nearby clinics');
           return;
         }
       }
@@ -163,9 +169,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
       _calculateAllDistances();
       _updateMarkers();
       _centerMapOnUser();
-      
+
       print('Location acquired: ${position.latitude}, ${position.longitude}');
-      
     } catch (e) {
       print('Error getting current location: $e');
       setState(() {
@@ -198,7 +203,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
         try {
           final lat = double.parse(clinic['lat'] ?? '0');
           final lng = double.parse(clinic['lng'] ?? '0');
-          
+
           final distance = Geolocator.distanceBetween(
             _currentPosition!.latitude,
             _currentPosition!.longitude,
@@ -222,7 +227,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
         try {
           final lat = double.parse(outlet['lat'] ?? '0');
           final lng = double.parse(outlet['lng'] ?? '0');
-          
+
           final distance = Geolocator.distanceBetween(
             _currentPosition!.latitude,
             _currentPosition!.longitude,
@@ -242,7 +247,6 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
       // 📊 Smart Sorting by distance
       _sortLocationsByDistance();
-      
     } catch (e) {
       print('Error calculating distances: $e');
     }
@@ -300,7 +304,10 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
           final lngStr = location['lng'];
           final name = location['name'] ?? 'Unknown Location';
 
-          if (latStr == null || lngStr == null || latStr.isEmpty || lngStr.isEmpty) {
+          if (latStr == null ||
+              lngStr == null ||
+              latStr.isEmpty ||
+              lngStr.isEmpty) {
             print('Skipping location $name: Missing coordinates');
             continue;
           }
@@ -309,13 +316,15 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
           final lng = double.tryParse(lngStr);
 
           if (lat == null || lng == null) {
-            print('Skipping location $name: Invalid coordinates ($latStr, $lngStr)');
+            print(
+                'Skipping location $name: Invalid coordinates ($latStr, $lngStr)');
             continue;
           }
 
           // Validate coordinate ranges
           if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
-            print('Skipping location $name: Coordinates out of range ($lat, $lng)');
+            print(
+                'Skipping location $name: Coordinates out of range ($lat, $lng)');
             continue;
           }
 
@@ -449,7 +458,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                 ),
                 if (location['distance'] != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _getDistanceColor(
                         location['distance'],
@@ -502,7 +512,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
                   ),
                 ),
               ],
@@ -536,7 +547,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
     );
   }
 
-  void _createRouteToLocation(Map<String, dynamic> location) {
+  void _createRouteToLocation(Map<String, dynamic> location) async {
     // Close the bottom sheet/modal first
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
@@ -554,79 +565,293 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
       return;
     }
 
-    setState(() {
-      _selectedLocation = location;
-      _polylines.clear();
+    // Show travel mode selection dialog first
+    final selectedMode = await _showTravelModeDialog();
+    if (selectedMode == null) return;
 
-      _polylines.add(
-        Polyline(
-          polylineId: const PolylineId('route_to_location'),
-          points: [
-            LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
-            LatLng(
-              double.parse(location['lat']!),
-              double.parse(location['lng']!),
-            ),
-          ],
-          color: selectedType == "clinic" ? Colors.redAccent : Colors.blue,
-          width: 4,
-          patterns: [PatternItem.dash(20), PatternItem.gap(10)],
-        ),
-      );
+    setState(() {
+      _isLoadingRoute = true;
+      _selectedLocation = location;
+      _selectedTravelMode = selectedMode;
+      _polylines.clear();
     });
 
-    // Show success message
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            Icon(Icons.route, color: Colors.white),
-            SizedBox(width: 8),
-            Text('Route displayed on map'),
-          ],
-        ),
-        backgroundColor: Colors.green,
-        duration: Duration(seconds: 2),
-      ),
-    );
+    try {
+      final origin =
+          LatLng(_currentPosition!.latitude, _currentPosition!.longitude);
+      final destination = LatLng(
+        double.parse(location['lat']!),
+        double.parse(location['lng']!),
+      );
 
-    _fitMapToShowBothPoints(location);
+      final routeInfo = await _directionsService.getDirections(
+        origin: origin,
+        destination: destination,
+        travelMode: selectedMode,
+      );
+
+      if (routeInfo != null) {
+        setState(() {
+          _currentRoute = routeInfo;
+          _polylines.clear();
+          _polylines.add(
+            Polyline(
+              polylineId: const PolylineId('route_to_location'),
+              points: routeInfo.polylinePoints,
+              color: _getTravelModeColor(selectedMode),
+              width: 5,
+              patterns: selectedMode == TravelMode.walking
+                  ? [PatternItem.dot, PatternItem.gap(10)]
+                  : [],
+            ),
+          );
+          _isLoadingRoute = false;
+        });
+
+        // Show route information
+        _showRouteInfoSnackBar(routeInfo);
+        _fitMapToShowRoute(routeInfo.polylinePoints);
+      } else {
+        setState(() {
+          _isLoadingRoute = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Route service unavailable. Please check your internet connection.',
+              style: TextStyle(fontSize: 14),
+            ),
+            backgroundColor: Colors.orange,
+            duration: Duration(seconds: 4),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoadingRoute = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error finding route: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
-  void _fitMapToShowBothPoints(Map<String, dynamic> location) {
-    if (_mapController == null || _currentPosition == null) return;
+  Future<TravelMode?> _showTravelModeDialog() async {
+    return showDialog<TravelMode>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Select Travel Mode',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildTravelModeOption(
+                TravelMode.driving,
+                FontAwesomeIcons.car,
+                'Driving',
+                'Fastest route by car',
+                Colors.blue,
+              ),
+              const SizedBox(height: 12),
+              _buildTravelModeOption(
+                TravelMode.walking,
+                FontAwesomeIcons.personWalking,
+                'Walking',
+                'Pedestrian route',
+                Colors.green,
+              ),
+              const SizedBox(height: 12),
+              _buildTravelModeOption(
+                TravelMode.motorcycle,
+                FontAwesomeIcons.motorcycle,
+                'Motorcycle/Bike',
+                'Two-wheeler route',
+                Colors.orange,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildTravelModeOption(
+    TravelMode mode,
+    IconData icon,
+    String title,
+    String description,
+    Color color,
+  ) {
+    return InkWell(
+      onTap: () => Navigator.of(context).pop(mode),
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade300),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _getTravelModeColor(TravelMode mode) {
+    switch (mode) {
+      case TravelMode.driving:
+        return Colors.blue;
+      case TravelMode.walking:
+        return Colors.green;
+      case TravelMode.bicycling:
+        return Colors.orange;
+      case TravelMode.motorcycle:
+        return Colors.orange;
+      case TravelMode.transit:
+        return Colors.purple;
+    }
+  }
+
+  void _showRouteInfoSnackBar(RouteInfo routeInfo) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              _getTravelModeIcon(routeInfo.travelMode),
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${routeInfo.distance} • ${routeInfo.duration}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    _getTravelModeDisplayName(routeInfo.travelMode),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: _getTravelModeColor(routeInfo.travelMode),
+        duration: const Duration(seconds: 4),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  IconData _getTravelModeIcon(TravelMode mode) {
+    switch (mode) {
+      case TravelMode.driving:
+        return FontAwesomeIcons.car;
+      case TravelMode.walking:
+        return FontAwesomeIcons.personWalking;
+      case TravelMode.bicycling:
+        return FontAwesomeIcons.bicycle;
+      case TravelMode.motorcycle:
+        return FontAwesomeIcons.motorcycle;
+      case TravelMode.transit:
+        return FontAwesomeIcons.bus;
+    }
+  }
+
+  String _getTravelModeDisplayName(TravelMode mode) {
+    switch (mode) {
+      case TravelMode.driving:
+        return 'Driving route';
+      case TravelMode.walking:
+        return 'Walking route';
+      case TravelMode.bicycling:
+        return 'Bicycling route';
+      case TravelMode.motorcycle:
+        return 'Motorcycle/Bike route';
+      case TravelMode.transit:
+        return 'Public transit route';
+    }
+  }
+
+  void _fitMapToShowRoute(List<LatLng> points) {
+    if (_mapController == null || points.isEmpty) return;
 
     try {
-      final userLat = _currentPosition!.latitude;
-      final userLng = _currentPosition!.longitude;
-      final locLat = double.parse(location['lat']!);
-      final locLng = double.parse(location['lng']!);
+      double minLat = points.first.latitude;
+      double maxLat = points.first.latitude;
+      double minLng = points.first.longitude;
+      double maxLng = points.first.longitude;
+
+      for (final point in points) {
+        minLat = minLat < point.latitude ? minLat : point.latitude;
+        maxLat = maxLat > point.latitude ? maxLat : point.latitude;
+        minLng = minLng < point.longitude ? minLng : point.longitude;
+        maxLng = maxLng > point.longitude ? maxLng : point.longitude;
+      }
 
       final bounds = LatLngBounds(
-        southwest: LatLng(
-          userLat < locLat ? userLat : locLat,
-          userLng < locLng ? userLng : locLng,
-        ),
-        northeast: LatLng(
-          userLat > locLat ? userLat : locLat,
-          userLng > locLng ? userLng : locLng,
-        ),
+        southwest: LatLng(minLat, minLng),
+        northeast: LatLng(maxLat, maxLng),
       );
 
       _mapController!.animateCamera(
         CameraUpdate.newLatLngBounds(bounds, 100.0),
       );
     } catch (e) {
-      print('Error fitting map to show both points: $e');
-      // Fallback: just move to the destination
-      _mapController!.animateCamera(
-        CameraUpdate.newLatLng(
-          LatLng(
-            double.parse(location['lat']!),
-            double.parse(location['lng']!),
-          ),
-        ),
-      );
+      print('Error fitting map to route: $e');
     }
   }
 
@@ -658,16 +883,14 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                     ? FontAwesomeIcons.userDoctor
                     : FontAwesomeIcons.pills,
                 size: 14,
-                color: selectedType == "clinic"
-                    ? Colors.redAccent
-                    : Colors.blue,
+                color:
+                    selectedType == "clinic" ? Colors.redAccent : Colors.blue,
               ),
               label: Text(
                 selectedType == "clinic" ? 'Clinics' : 'Outlets',
                 style: TextStyle(
-                  color: selectedType == "clinic"
-                      ? Colors.redAccent
-                      : Colors.blue,
+                  color:
+                      selectedType == "clinic" ? Colors.redAccent : Colors.blue,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -772,6 +995,76 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
             ),
           ),
 
+          // Route Information Panel
+          if (_currentRoute != null && !_isLoadingRoute)
+            Positioned(
+              top: 80,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _getTravelModeColor(_currentRoute!.travelMode)
+                            .withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(
+                        _getTravelModeIcon(_currentRoute!.travelMode),
+                        color: _getTravelModeColor(_currentRoute!.travelMode),
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '${_currentRoute!.distance} • ${_currentRoute!.duration}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            _getTravelModeDisplayName(
+                                _currentRoute!.travelMode),
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_selectedLocation != null)
+                      Text(
+                        'to ${_selectedLocation!['name']}',
+                        style: TextStyle(
+                          color: Colors.grey.shade600,
+                          fontSize: 12,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+
           // Bottom Controls
           Positioned(
             bottom: 24,
@@ -837,8 +1130,37 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
                 const Spacer(),
 
+                // Route Loading Indicator
+                if (_isLoadingRoute)
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: selectedType == "clinic"
+                              ? Colors.redAccent
+                              : Colors.blue,
+                        ),
+                      ),
+                    ),
+                  ),
+
                 // Clear Route Button (if route exists)
-                if (_polylines.isNotEmpty)
+                if (_polylines.isNotEmpty && !_isLoadingRoute)
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -856,6 +1178,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                         setState(() {
                           _polylines.clear();
                           _selectedLocation = null;
+                          _currentRoute = null;
                         });
                       },
                       icon: Icon(
@@ -877,6 +1200,7 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
       selectedType = selectedType == "clinic" ? "drug" : "clinic";
       _polylines.clear();
       _selectedLocation = null;
+      _currentRoute = null;
     });
     _updateMarkers();
   }
@@ -912,7 +1236,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
 
               // Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 child: Row(
                   children: [
                     Icon(
@@ -954,7 +1279,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
               Expanded(
                 child: ListView.builder(
                   controller: scrollController,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   itemCount: dataList.length,
                   itemBuilder: (context, index) {
                     final item = dataList[index];
@@ -996,9 +1322,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   selectedType == "clinic"
                       ? FontAwesomeIcons.userDoctor
                       : FontAwesomeIcons.pills,
-                  color: selectedType == "clinic"
-                      ? Colors.redAccent
-                      : Colors.blue,
+                  color:
+                      selectedType == "clinic" ? Colors.redAccent : Colors.blue,
                   size: 16,
                 ),
               ),
@@ -1030,7 +1355,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
               ),
               if (item['distance'] != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getDistanceColor(item['distance']).withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
@@ -1089,7 +1415,8 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 ),
               ),
             ],
