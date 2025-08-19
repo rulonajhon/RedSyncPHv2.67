@@ -188,54 +188,34 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       }
 
       // If recent conversation was about hemophilia, allow follow-up questions
+      // BUT ONLY if they contain medical/treatment terms
       if (hasRecentHemophiliaContext) {
-        // Check if this looks like a follow-up question or treatment inquiry
-        final followUpPatterns = [
-          'can i',
-          'should i',
-          'is it safe',
-          'what about',
-          'how about',
-          'can i use',
-          'should i use',
-          'is it okay',
-          'what if',
-          'also',
-          'too',
-          'as well',
-          'instead',
-          'alternatively',
-          'yes',
-          'no',
-          'okay',
-          'ok',
-          'sure',
-          'right',
+        // Only allow follow-ups that mention medical/treatment terms
+        final medicalTreatmentTerms = [
+          'water', 'salt', 'ice', 'heat', 'warm', 'cold', 'compress',
+          'bandage', 'pressure', 'rest', 'elevation', 'medication',
+          'treatment', 'remedy', 'home remedy', 'care', 'help',
+          'apply', 'use for', 'take for', 'medicine', 'therapy',
+          'bleeding', 'blood', 'pain', 'swelling', 'bruise',
+          'doctor', 'hospital', 'emergency', 'first aid',
+          'dose', 'dosage', 'infusion', 'injection', 'factor',
         ];
 
-        final treatmentTerms = [
-          'water',
-          'salt',
-          'ice',
-          'heat',
-          'warm',
-          'cold',
-          'compress',
-          'bandage',
-          'pressure',
-          'rest',
-          'elevation',
-          'medication',
-          'treatment',
-          'remedy',
-          'home remedy',
-          'care',
-          'help',
-        ];
+        // Check if the query contains medical/treatment context
+        bool containsMedicalTerms = medicalTreatmentTerms.any(
+          (term) => lowerQuery.contains(term)
+        );
 
-        if (followUpPatterns.any((pattern) => lowerQuery.contains(pattern)) ||
-            treatmentTerms.any((term) => lowerQuery.contains(term))) {
-          return true;
+        // Only allow if it's a medical follow-up question
+        if (containsMedicalTerms) {
+          final followUpPatterns = [
+            'can i', 'should i', 'is it safe', 'can i use', 'should i use',
+            'is it okay', 'what about', 'how about', 'what if',
+          ];
+          
+          if (followUpPatterns.any((pattern) => lowerQuery.contains(pattern))) {
+            return true;
+          }
         }
       }
     }
