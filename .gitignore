@@ -19,6 +19,9 @@ migrate_working_dir/
 ios/Runner/Config.plist
 android/secrets.properties
 lib/config/api_keys.dart
+**/secrets.properties
+**/google-services.json
+**/GoogleService-Info.plist
 
 # IntelliJ related
 *.iml

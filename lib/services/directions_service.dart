@@ -24,7 +24,8 @@ class RouteInfo {
 }
 
 class DirectionsService {
-  static const String _baseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
+  static const String _baseUrl =
+      'https://maps.googleapis.com/maps/api/directions/json';
   
   // Use environment variable instead of hardcoded API key
   String get _apiKey => AppConfig.googleMapsApiKey;
@@ -41,164 +42,67 @@ class DirectionsService {
           'mode=${_getTravelModeString(travelMode)}&'
           'key=$_apiKey';
 
-      print('Making Directions API call: $url');
-      
-      final response = await http.get(Uri.parse(url)).timeout(
-        const Duration(seconds: 10),
-        onTimeout: () {
-          throw Exception('API request timeout');
-        },
-      );
+      print('Directions API URL: $url');
 
-      print('API Response Status: ${response.statusCode}');
-      print('API Response Body: ${response.body}');
+      final response = await http.get(Uri.parse(url));
+      print('Directions API Response Status: ${response.statusCode}');
+      print('Directions API Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> data = jsonDecode(response.body);
-        
+        final Map<String, dynamic> data = json.decode(response.body);
+
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
           final leg = route['legs'][0];
-          
-          // Decode the polyline
-          final String encodedPolyline = route['overview_polyline']['points'];
-          final PolylinePoints polylinePoints = PolylinePoints();
-          final List<PointLatLng> result = polylinePoints.decodePolyline(encodedPolyline);
-          
-          // Convert to LatLng
-          final List<LatLng> polylineCoordinates = result
-              .map((point) => LatLng(point.latitude, point.longitude))
-              .toList();
 
-          final String distance = leg['distance']['text'];
-          final String duration = leg['duration']['text'];
-          final String instructions = _generateInstructions(route);
+          // Get polyline points
+          final polylinePoints = <LatLng>[];
+          if (route['overview_polyline'] != null &&
+              route['overview_polyline']['points'] != null) {
+            final encodedPoints = route['overview_polyline']['points'];
+            final decodedPoints =
+                PolylinePoints().decodePolyline(encodedPoints);
 
-          print('Successfully decoded route with ${polylineCoordinates.length} points');
+            for (var point in decodedPoints) {
+              polylinePoints.add(LatLng(point.latitude, point.longitude));
+            }
+          }
+
+          // If no polyline points, create a fallback route
+          if (polylinePoints.isEmpty) {
+            print('No polyline points from API, creating fallback route');
+            return _createFallbackRoute(origin, destination, travelMode);
+          }
 
           return RouteInfo(
-            polylinePoints: polylineCoordinates,
-            distance: distance,
-            duration: duration,
-            instructions: instructions,
+            polylinePoints: polylinePoints,
+            distance: leg['distance']['text'] ?? 'N/A',
+            duration: leg['duration']['text'] ?? 'N/A',
+            instructions: leg['steps']?.isNotEmpty == true
+                ? leg['steps'][0]['html_instructions']
+                        ?.replaceAll(RegExp(r'<[^>]*>'), '') ??
+                    'Navigate to destination'
+                : 'Navigate to destination',
             travelMode: travelMode,
           );
         } else {
-          print('Directions API Error Status: ${data['status']}');
-          if (data['error_message'] != null) {
-            print('API Error Message: ${data['error_message']}');
-          }
-          
-          // Fallback to straight line route
+          print('Directions API error or no routes: ${data['status']}');
+          // Return fallback route for any API issues
           return _createFallbackRoute(origin, destination, travelMode);
         }
       } else {
-        print('HTTP Error: ${response.statusCode} - ${response.body}');
-        // Fallback to straight line route
+        print('HTTP Error: ${response.statusCode}');
         return _createFallbackRoute(origin, destination, travelMode);
       }
     } catch (e) {
       print('Exception in getDirections: $e');
-      // Fallback to straight line route
       return _createFallbackRoute(origin, destination, travelMode);
-    }
-  }
-
-  // Create a fallback route using straight line
-  RouteInfo _createFallbackRoute(LatLng origin, LatLng destination, TravelMode travelMode) {
-    print('Creating fallback straight-line route');
-    
-    // Calculate straight-line distance
-    final distanceMeters = _calculateDistance(origin, destination);
-    final distanceKm = distanceMeters / 1000;
-    
-    // Estimate time based on travel mode
-    final estimatedTime = _estimateTime(distanceKm, travelMode);
-    
-    return RouteInfo(
-      polylinePoints: [origin, destination],
-      distance: '${distanceKm.toStringAsFixed(1)} km',
-      duration: estimatedTime,
-      instructions: 'Straight line route (${_getTravelModeDisplayName(travelMode)})',
-      travelMode: travelMode,
-    );
-  }
-
-  // Generate basic instructions from route data
-  String _generateInstructions(Map<String, dynamic> route) {
-    try {
-      final leg = route['legs'][0];
-      final steps = leg['steps'] as List;
-      
-      if (steps.isNotEmpty) {
-        // Get first few steps
-        final firstSteps = steps.take(3).map((step) {
-          String instruction = step['html_instructions'] ?? '';
-          // Remove HTML tags
-          instruction = instruction.replaceAll(RegExp(r'<[^>]*>'), '');
-          return instruction;
-        }).where((instruction) => instruction.isNotEmpty).join(' → ');
-        
-        return firstSteps.isNotEmpty ? firstSteps : 'Route found';
-      }
-    } catch (e) {
-      print('Error generating instructions: $e');
-    }
-    return 'Route found';
-  }
-
-  // Calculate distance using Haversine formula
-  double _calculateDistance(LatLng origin, LatLng destination) {
-    const double earthRadius = 6371000; // Earth radius in meters
-    
-    final double lat1Rad = origin.latitude * (pi / 180);
-    final double lat2Rad = destination.latitude * (pi / 180);
-    final double deltaLatRad = (destination.latitude - origin.latitude) * (pi / 180);
-    final double deltaLngRad = (destination.longitude - origin.longitude) * (pi / 180);
-
-    final double a = sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
-        cos(lat1Rad) * cos(lat2Rad) *
-        sin(deltaLngRad / 2) * sin(deltaLngRad / 2);
-    final double c = 2 * asin(sqrt(a));
-
-    return earthRadius * c;
-  }
-
-  // Estimate travel time based on mode
-  String _estimateTime(double distanceKm, TravelMode travelMode) {
-    double speedKmh;
-    switch (travelMode) {
-      case TravelMode.driving:
-      case TravelMode.motorcycle: // Motorcycles use same roads as cars
-        speedKmh = 40; // Average city driving speed
-        break;
-      case TravelMode.walking:
-        speedKmh = 5; // Average walking speed
-        break;
-      case TravelMode.bicycling:
-        speedKmh = 15; // Average cycling speed
-        break;
-      case TravelMode.transit:
-        speedKmh = 25; // Average transit speed
-        break;
-    }
-    
-    final double timeHours = distanceKm / speedKmh;
-    final int totalMinutes = (timeHours * 60).round();
-    
-    if (totalMinutes < 60) {
-      return '$totalMinutes mins';
-    } else {
-      final int hours = totalMinutes ~/ 60;
-      final int minutes = totalMinutes % 60;
-      return '${hours}h ${minutes}m';
     }
   }
 
   String _getTravelModeString(TravelMode mode) {
     switch (mode) {
       case TravelMode.driving:
-      case TravelMode.motorcycle: // Motorcycles use driving mode in Google API
         return 'driving';
       case TravelMode.walking:
         return 'walking';
@@ -206,21 +110,94 @@ class DirectionsService {
         return 'bicycling';
       case TravelMode.transit:
         return 'transit';
+      case TravelMode.motorcycle:
+        // Use driving mode for motorcycle since Google doesn't have specific motorcycle routing
+        return 'driving';
     }
   }
 
-  String _getTravelModeDisplayName(TravelMode mode) {
-    switch (mode) {
-      case TravelMode.driving:
-        return 'driving';
+  RouteInfo _createFallbackRoute(
+      LatLng origin, LatLng destination, TravelMode travelMode) {
+    // Calculate straight-line distance using Haversine formula
+    final distance = _calculateDistance(origin, destination);
+
+    // Estimate duration based on travel mode
+    final duration = _estimateDuration(distance, travelMode);
+
+    return RouteInfo(
+      polylinePoints: [origin, destination],
+      distance: '${distance.toStringAsFixed(1)} km',
+      duration: duration,
+      instructions:
+          'Head ${_getDirection(origin, destination)} toward destination',
+      travelMode: travelMode,
+    );
+  }
+
+  double _calculateDistance(LatLng origin, LatLng destination) {
+    const double earthRadius = 6371; // Earth radius in kilometers
+
+    final double lat1Rad = origin.latitude * (pi / 180);
+    final double lat2Rad = destination.latitude * (pi / 180);
+    final double deltaLatRad =
+        (destination.latitude - origin.latitude) * (pi / 180);
+    final double deltaLonRad =
+        (destination.longitude - origin.longitude) * (pi / 180);
+
+    final double a = sin(deltaLatRad / 2) * sin(deltaLatRad / 2) +
+        cos(lat1Rad) *
+            cos(lat2Rad) *
+            sin(deltaLonRad / 2) *
+            sin(deltaLonRad / 2);
+
+    final double c = 2 * atan2(sqrt(a), sqrt(1 - a));
+
+    return earthRadius * c;
+  }
+
+  String _estimateDuration(double distanceKm, TravelMode travelMode) {
+    double speedKmh;
+
+    switch (travelMode) {
       case TravelMode.walking:
-        return 'walking';
+        speedKmh = 5; // 5 km/h average walking speed
+        break;
       case TravelMode.bicycling:
-        return 'cycling';
-      case TravelMode.transit:
-        return 'transit';
+        speedKmh = 15; // 15 km/h average cycling speed
+        break;
+      case TravelMode.driving:
       case TravelMode.motorcycle:
-        return 'motorcycle';
+        speedKmh = 40; // 40 km/h average city driving speed
+        break;
+      case TravelMode.transit:
+        speedKmh = 25; // 25 km/h average transit speed
+        break;
+    }
+
+    final double durationHours = distanceKm / speedKmh;
+    final int totalMinutes = (durationHours * 60).round();
+
+    if (totalMinutes < 60) {
+      return '$totalMinutes min';
+    } else {
+      final int hours = totalMinutes ~/ 60;
+      final int minutes = totalMinutes % 60;
+      if (minutes == 0) {
+        return '$hours hour${hours == 1 ? '' : 's'}';
+      } else {
+        return '$hours hour${hours == 1 ? '' : 's'} $minutes min';
+      }
+    }
+  }
+
+  String _getDirection(LatLng origin, LatLng destination) {
+    final double deltaLat = destination.latitude - origin.latitude;
+    final double deltaLon = destination.longitude - origin.longitude;
+
+    if (deltaLat.abs() > deltaLon.abs()) {
+      return deltaLat > 0 ? 'north' : 'south';
+    } else {
+      return deltaLon > 0 ? 'east' : 'west';
     }
   }
 }

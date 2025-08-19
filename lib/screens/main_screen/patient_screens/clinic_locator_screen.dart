@@ -21,7 +21,6 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
   final Set<Polyline> _polylines = {};
   Map<String, dynamic>? _selectedLocation;
   final DirectionsService _directionsService = DirectionsService();
-  TravelMode _selectedTravelMode = TravelMode.driving;
   RouteInfo? _currentRoute;
   bool _isLoadingRoute = false;
 
@@ -572,7 +571,6 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
     setState(() {
       _isLoadingRoute = true;
       _selectedLocation = location;
-      _selectedTravelMode = selectedMode;
       _polylines.clear();
     });
 
@@ -750,10 +748,10 @@ class _ClinicLocatorScreenState extends State<ClinicLocatorScreen> {
         return Colors.green;
       case TravelMode.bicycling:
         return Colors.orange;
-      case TravelMode.motorcycle:
-        return Colors.orange;
       case TravelMode.transit:
         return Colors.purple;
+      case TravelMode.motorcycle:
+        return Colors.red;
     }
   }
 
