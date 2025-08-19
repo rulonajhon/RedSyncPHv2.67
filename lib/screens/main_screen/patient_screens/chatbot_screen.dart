@@ -169,68 +169,79 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       return true;
     }
 
-    // Define hemophilia-related keywords and phrases
-    final hemophiliaKeywords = [
-      // Direct hemophilia terms
-      'hemophilia', 'haemophilia', 'hemophiliac', 'haemophiliac',
+    // NEW: Check conversation context - if recent messages were about hemophilia,
+    // allow follow-up questions even if they don't contain explicit hemophilia keywords
+    if (_sessionMessages.length >= 2) {
+      // Check the last 4 messages (2 user + 2 assistant) for hemophilia context
+      final recentMessages = _sessionMessages
+          .skip(_sessionMessages.length > 4 ? _sessionMessages.length - 4 : 0)
+          .take(4)
+          .toList();
 
-      // Types of hemophilia
-      'hemophilia a',
-      'hemophilia b',
-      'hemophilia c',
-      'factor viii',
-      'factor ix',
-      'factor xi',
-      'von willebrand', 'vwd', 'factor deficiency',
+      bool hasRecentHemophiliaContext = false;
+      for (final message in recentMessages) {
+        final messageText = message.text.toLowerCase();
+        if (_containsHemophiliaKeywords(messageText)) {
+          hasRecentHemophiliaContext = true;
+          break;
+        }
+      }
 
-      // Symptoms and conditions
-      'bleeding', 'bruising', 'clotting', 'coagulation', 'hemorrhage',
-      'internal bleeding', 'joint bleeding', 'muscle bleeding', 'epistaxis',
-      'hematoma', 'petechiae', 'ecchymosis', 'prolonged bleeding',
-      'excessive bleeding', 'abnormal bleeding',
+      // If recent conversation was about hemophilia, allow follow-up questions
+      if (hasRecentHemophiliaContext) {
+        // Check if this looks like a follow-up question or treatment inquiry
+        final followUpPatterns = [
+          'can i',
+          'should i',
+          'is it safe',
+          'what about',
+          'how about',
+          'can i use',
+          'should i use',
+          'is it okay',
+          'what if',
+          'also',
+          'too',
+          'as well',
+          'instead',
+          'alternatively',
+          'yes',
+          'no',
+          'okay',
+          'ok',
+          'sure',
+          'right',
+        ];
 
-      // Treatments and medications
-      'factor concentrate', 'factor replacement', 'desmopressin', 'ddavp',
-      'antifibrinolytic', 'tranexamic acid', 'aminocaproic acid',
-      'plasma', 'cryoprecipitate', 'fresh frozen plasma', 'ffp',
-      'prophylaxis', 'on-demand treatment', 'infusion',
+        final treatmentTerms = [
+          'water',
+          'salt',
+          'ice',
+          'heat',
+          'warm',
+          'cold',
+          'compress',
+          'bandage',
+          'pressure',
+          'rest',
+          'elevation',
+          'medication',
+          'treatment',
+          'remedy',
+          'home remedy',
+          'care',
+          'help',
+        ];
 
-      // Medical terms
-      'coagulation factor', 'blood clotting', 'platelet', 'hemostasis',
-      'bleeding disorder', 'inherited bleeding', 'genetic bleeding',
-      'bleeding time', 'pt', 'ptt', 'aptt', 'inr',
+        if (followUpPatterns.any((pattern) => lowerQuery.contains(pattern)) ||
+            treatmentTerms.any((term) => lowerQuery.contains(term))) {
+          return true;
+        }
+      }
+    }
 
-      // Body parts commonly affected
-      'joint', 'knee', 'elbow', 'ankle', 'shoulder', 'hip',
-      'muscle', 'brain bleeding', 'intracranial',
-
-      // Emergency situations
-      'head injury', 'trauma', 'surgery', 'dental', 'tooth extraction',
-      'emergency', 'first aid', 'urgent care',
-
-      // Lifestyle topics
-      'exercise', 'sports', 'physical activity', 'diet', 'nutrition',
-      'travel', 'school', 'work', 'pregnancy', 'childbirth',
-
-      // Medical professionals
-      'hematologist', 'hemophilia center', 'comprehensive care',
-      'treatment center', 'htc',
-
-      // Support and resources
-      'support group', 'hemophilia foundation', 'patient education',
-      'family planning', 'genetic counseling', 'carrier testing',
-
-      // Related conditions
-      'bleeding disorder', 'platelet disorder', 'thrombocytopenia',
-      'immune thrombocytopenic purpura', 'itp',
-    ];
-
-    // Check if query contains any hemophilia-related keywords
-    bool containsKeywords = hemophiliaKeywords.any(
-      (keyword) => lowerQuery.contains(keyword),
-    );
-
-    if (containsKeywords) {
+    // Check if query directly contains hemophilia keywords
+    if (_containsHemophiliaKeywords(lowerQuery)) {
       return true;
     }
 
@@ -305,6 +316,55 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
     }
 
     return false;
+  }
+
+  // Helper method to check if text contains hemophilia-related keywords
+  bool _containsHemophiliaKeywords(String text) {
+    final lowerText = text.toLowerCase();
+
+    // Define comprehensive hemophilia-related keywords
+    final hemophiliaKeywords = [
+      // Direct hemophilia terms
+      'hemophilia', 'haemophilia', 'hemophiliac', 'haemophiliac',
+
+      // Types of hemophilia
+      'hemophilia a', 'hemophilia b', 'hemophilia c',
+      'factor viii', 'factor ix', 'factor xi',
+      'von willebrand', 'vwd', 'factor deficiency',
+
+      // Symptoms and conditions
+      'bleeding', 'bruising', 'clotting', 'coagulation', 'hemorrhage',
+      'internal bleeding', 'joint bleeding', 'muscle bleeding', 'epistaxis',
+      'hematoma', 'petechiae', 'ecchymosis', 'prolonged bleeding',
+      'excessive bleeding', 'abnormal bleeding', 'gum bleeding',
+      'nose bleeding', 'nosebleed',
+
+      // Treatments and medications
+      'factor concentrate', 'factor replacement', 'desmopressin', 'ddavp',
+      'antifibrinolytic', 'tranexamic acid', 'aminocaproic acid',
+      'plasma', 'cryoprecipitate', 'fresh frozen plasma', 'ffp',
+      'prophylaxis', 'on-demand treatment', 'infusion',
+
+      // Medical terms
+      'coagulation factor', 'blood clotting', 'platelet', 'hemostasis',
+      'bleeding disorder', 'inherited bleeding', 'genetic bleeding',
+      'bleeding time', 'pt', 'ptt', 'aptt', 'inr',
+
+      // Body parts commonly affected
+      'joint', 'knee', 'elbow', 'ankle', 'shoulder', 'hip',
+      'muscle', 'brain bleeding', 'intracranial', 'gum', 'gums',
+
+      // Emergency situations
+      'head injury', 'trauma', 'surgery', 'dental', 'tooth extraction',
+      'emergency', 'first aid', 'urgent care',
+
+      // Related conditions
+      'bleeding disorder', 'platelet disorder', 'thrombocytopenia',
+      'immune thrombocytopenic purpura', 'itp',
+    ];
+
+    // Check if text contains any hemophilia keywords
+    return hemophiliaKeywords.any((keyword) => lowerText.contains(keyword));
   }
 
   void _scrollToBottom() {
@@ -427,7 +487,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                 ? _buildEmptyState()
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 20),
                     itemCount: _sessionMessages.length + (_isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == _sessionMessages.length && _isLoading) {
@@ -494,9 +555,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
         top: index == 0 ? 0 : (isConsecutive ? 0 : 8),
       ),
       child: Column(
-        crossAxisAlignment: message.isUser
-            ? CrossAxisAlignment.end
-            : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            message.isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: message.isUser
@@ -523,13 +583,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                   const SizedBox(width: 32),
                 const SizedBox(width: 8),
               ],
-
               Flexible(
                 child: Container(
                   constraints: BoxConstraints(
                     maxWidth: MediaQuery.of(context).size.width * 0.75,
                   ),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
                     color: message.isUser ? Colors.red.shade700 : Colors.white,
                     borderRadius: BorderRadius.only(
@@ -577,7 +637,6 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                         ),
                 ),
               ),
-
               if (message.isUser) ...[
                 const SizedBox(width: 8),
                 if (!isConsecutive)
@@ -588,7 +647,8 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
                       color: Colors.red.shade700,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(Icons.person, color: Colors.white, size: 16),
+                    child:
+                        const Icon(Icons.person, color: Colors.white, size: 16),
                   )
                 else
                   const SizedBox(width: 32),
