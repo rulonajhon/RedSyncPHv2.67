@@ -26,9 +26,21 @@ class RouteInfo {
 class DirectionsService {
   static const String _baseUrl =
       'https://maps.googleapis.com/maps/api/directions/json';
-  
+
   // Use environment variable instead of hardcoded API key
-  String get _apiKey => AppConfig.googleMapsApiKey;
+  String get _apiKey {
+    try {
+      final key = AppConfig.googleMapsApiKey;
+      print('🔑 API Key retrieved: ${key.substring(0, 10)}...${key.substring(key.length - 4)}');
+      return key;
+    } catch (e) {
+      print('❌ Failed to get API key from environment: $e');
+      // Fallback to hardcoded key for debugging
+      const fallbackKey = 'AIzaSyACs7QdWeo6T65-_znx83BvjoVIEI7GGiI';
+      print('🔧 Using fallback API key for debugging');
+      return fallbackKey;
+    }
+  }
 
   Future<RouteInfo?> getDirections({
     required LatLng origin,
@@ -36,24 +48,31 @@ class DirectionsService {
     required TravelMode travelMode,
   }) async {
     try {
+      // Debug: Check if API key is loaded
+      print('🔑 DirectionsService: Attempting to load API key...');
+      final apiKey = _apiKey;
+      print('🔑 DirectionsService: API key loaded successfully (${apiKey.substring(0, 10)}...)');
+      
       final String url = '$_baseUrl?'
           'origin=${origin.latitude},${origin.longitude}&'
           'destination=${destination.latitude},${destination.longitude}&'
           'mode=${_getTravelModeString(travelMode)}&'
-          'key=$_apiKey';
+          'key=$apiKey';
 
-      print('Directions API URL: $url');
+      print('🌐 Directions API URL: $url');
 
       final response = await http.get(Uri.parse(url));
-      print('Directions API Response Status: ${response.statusCode}');
-      print('Directions API Response Body: ${response.body}');
-
+      print('📡 Directions API Response Status: ${response.statusCode}');
+      
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
+        print('📋 Directions API Status: ${data['status']}');
 
         if (data['status'] == 'OK' && data['routes'].isNotEmpty) {
           final route = data['routes'][0];
           final leg = route['legs'][0];
+          
+          print('✅ Route found! Distance: ${leg['distance']['text']}, Duration: ${leg['duration']['text']}');
 
           // Get polyline points
           final polylinePoints = <LatLng>[];
@@ -66,11 +85,13 @@ class DirectionsService {
             for (var point in decodedPoints) {
               polylinePoints.add(LatLng(point.latitude, point.longitude));
             }
+            
+            print('🗺️ Polyline decoded: ${polylinePoints.length} points');
           }
 
           // If no polyline points, create a fallback route
           if (polylinePoints.isEmpty) {
-            print('No polyline points from API, creating fallback route');
+            print('⚠️ No polyline points from API, creating fallback route');
             return _createFallbackRoute(origin, destination, travelMode);
           }
 
@@ -86,16 +107,20 @@ class DirectionsService {
             travelMode: travelMode,
           );
         } else {
-          print('Directions API error or no routes: ${data['status']}');
+          print('❌ Directions API error or no routes: ${data['status']}');
+          if (data['error_message'] != null) {
+            print('❌ Error message: ${data['error_message']}');
+          }
           // Return fallback route for any API issues
           return _createFallbackRoute(origin, destination, travelMode);
         }
       } else {
-        print('HTTP Error: ${response.statusCode}');
+        print('❌ HTTP Error: ${response.statusCode}');
+        print('❌ Response body: ${response.body}');
         return _createFallbackRoute(origin, destination, travelMode);
       }
     } catch (e) {
-      print('Exception in getDirections: $e');
+      print('❌ Exception in getDirections: $e');
       return _createFallbackRoute(origin, destination, travelMode);
     }
   }
@@ -118,18 +143,22 @@ class DirectionsService {
 
   RouteInfo _createFallbackRoute(
       LatLng origin, LatLng destination, TravelMode travelMode) {
+    print('🚨 Creating FALLBACK route (straight line) - API failed or no polyline data');
+    
     // Calculate straight-line distance using Haversine formula
     final distance = _calculateDistance(origin, destination);
 
     // Estimate duration based on travel mode
     final duration = _estimateDuration(distance, travelMode);
 
+    print('📏 Fallback route: ${distance.toStringAsFixed(1)} km, $duration');
+
     return RouteInfo(
       polylinePoints: [origin, destination],
       distance: '${distance.toStringAsFixed(1)} km',
       duration: duration,
       instructions:
-          'Head ${_getDirection(origin, destination)} toward destination',
+          'Head ${_getDirection(origin, destination)} toward destination (Straight line - API unavailable)',
       travelMode: travelMode,
     );
   }
