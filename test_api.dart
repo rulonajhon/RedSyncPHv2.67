@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 
 void main() async {
   // Test the Google Directions API directly
-  const String apiKey = 'AIzaSyACs7QdWeo6T65-_znx83BvjoVIEI7GGiI';
+  const String apiKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE'; // Replace with actual key
   const String baseUrl = 'https://maps.googleapis.com/maps/api/directions/json';
 
   // Test coordinates (example: from Manila to Quezon City)

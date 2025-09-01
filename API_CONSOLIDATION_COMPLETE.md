@@ -11,9 +11,9 @@
 ### 2. Current API Key Status
 ```
 Root .env file contains:
-- OPENAI_API_KEY=sk-proj-SavbM4OS_... (COMPLETE KEY)
-- GOOGLE_MAPS_API_KEY=AIzaSyACs7Q...
-- FIREBASE_API_KEY=AIzaSyAZMQ...
+- OPENAI_API_KEY=[REDACTED-OPENAI-KEY] (COMPLETE KEY)
+- GOOGLE_MAPS_API_KEY=[REDACTED-GOOGLE-KEY]
+- FIREBASE_API_KEY=[REDACTED-FIREBASE-KEY]
 - Firebase configuration complete
 ```
 
@@ -43,7 +43,7 @@ Root .env file contains:
 2. Set travel mode to motorcycle
 3. Request directions between two points
 4. **Look for these debug logs in console**:
-   - 🔑 `Using API key: AIzaSyACs7Q...`
+   - 🔑 `Using API key: [REDACTED-GOOGLE-KEY]`
    - 🌐 `Directions URL: https://maps.googleapis.com/maps/api/directions/json?...`
    - 📡 `API Response Status: 200`
    - ✅ `Directions request successful`
@@ -60,7 +60,7 @@ OpenAI Service: Request successful
 
 #### For Directions Service:
 ```
-🔑 Using API key: AIzaSyACs7Q...
+🔑 Using API key: [REDACTED-GOOGLE-KEY]
 🌐 Directions URL: https://maps.googleapis.com/maps/api/directions/json?origin=...&destination=...&mode=driving&key=...
 📡 API Response Status: 200
 ✅ Directions request successful with 1 routes

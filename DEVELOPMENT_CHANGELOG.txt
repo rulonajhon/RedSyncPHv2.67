@@ -43,12 +43,12 @@ CHANGES MADE:
 1.1 Environment Variables Setup (.env):
    - Created secure root-level .env file
    - Consolidated all API keys:
-     * GOOGLE_MAPS_API_KEY=AIzaSyBjHQXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-     * FIREBASE_API_KEY=AIzaSyCXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-     * FIREBASE_APP_ID=1:123456789:android:xxxxxxxxxxxxxxxxxx
-     * FIREBASE_MESSAGING_SENDER_ID=123456789
-     * FIREBASE_PROJECT_ID=redsync-project-id
-     * OPENAI_API_KEY=sk-proj-SavbM4OSXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+     * GOOGLE_MAPS_API_KEY=[REDACTED-GOOGLE-MAPS-KEY]
+     * FIREBASE_API_KEY=[REDACTED-FIREBASE-KEY]
+     * FIREBASE_APP_ID=[REDACTED-APP-ID]
+     * FIREBASE_MESSAGING_SENDER_ID=[REDACTED-SENDER-ID]
+     * FIREBASE_PROJECT_ID=[REDACTED-PROJECT-ID]
+     * OPENAI_API_KEY=[REDACTED-OPENAI-KEY]
 
 1.2 Package Dependencies (pubspec.yaml):
    - Added flutter_dotenv: ^5.2.1 for secure environment variable handling

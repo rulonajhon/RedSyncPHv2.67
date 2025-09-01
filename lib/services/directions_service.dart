@@ -37,7 +37,7 @@ class DirectionsService {
     } catch (e) {
       print('❌ Failed to get API key from environment: $e');
       // Fallback to hardcoded key for debugging
-      const fallbackKey = 'AIzaSyACs7QdWeo6T65-_znx83BvjoVIEI7GGiI';
+      const fallbackKey = 'YOUR_GOOGLE_MAPS_API_KEY_HERE'; // Replace with actual key
       print('🔧 Using fallback API key for debugging');
       return fallbackKey;
     }
