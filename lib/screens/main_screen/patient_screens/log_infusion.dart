@@ -1,33 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:hive/hive.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../services/firestore.dart';
-
-part '../../../models/offline/log_infusion.g.dart';
-
-@HiveType(typeId: 1)
-class InfusionLog extends HiveObject {
-  @HiveField(0)
-  String medication;
-  @HiveField(1)
-  int doseIU;
-  @HiveField(2)
-  String date;
-  @HiveField(3)
-  String time;
-  @HiveField(4)
-  String notes;
-
-  InfusionLog({
-    required this.medication,
-    required this.doseIU,
-    required this.date,
-    required this.time,
-    required this.notes,
-  });
-}
+import '../../../services/offline_service.dart';
+import '../../../models/offline/infusion_log.dart';
 
 class LogInfusionScreen extends StatefulWidget {
   const LogInfusionScreen({super.key});
@@ -46,9 +21,9 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
   bool _isSaving = false;
   String _selectedMedicationType = '';
 
-  // Firebase services
+  // Firebase services and offline service
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirestoreService _firestoreService = FirestoreService();
+  final OfflineService _offlineService = OfflineService();
 
   final List<String> _medicationTypes = [
     'Factor VIII',
@@ -64,57 +39,15 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     super.initState();
     _selectedDate = DateTime.now();
     _selectedTime = TimeOfDay.now();
-    _initHive();
-    _syncLocalDataToFirestore(); // Sync any offline data
+    _initOfflineService();
   }
 
-  Future<void> _initHive() async {
-    final dir = await getApplicationDocumentsDirectory();
-    Hive.init(dir.path);
-    if (!Hive.isAdapterRegistered(1)) {
-      Hive.registerAdapter(InfusionLogAdapter());
-    }
-    await Hive.openBox<InfusionLog>('infusion_logs');
-  }
-
-  // Sync local Hive data to Firestore (for offline entries)
-  Future<void> _syncLocalDataToFirestore() async {
+  Future<void> _initOfflineService() async {
     try {
-      final user = _auth.currentUser;
-      if (user == null) return;
-
-      final box = Hive.box<InfusionLog>('infusion_logs');
-      final localLogs = box.values.toList();
-
-      // Get existing Firestore logs to avoid duplicates
-      final firestoreLogs = await _firestoreService.getInfusionLogs(user.uid);
-
-      for (final localLog in localLogs) {
-        // Check if this log already exists in Firestore
-        final exists = firestoreLogs.any(
-          (firestoreLog) =>
-              firestoreLog['medication'] == localLog.medication &&
-              firestoreLog['date'] == localLog.date &&
-              firestoreLog['time'] == localLog.time &&
-              firestoreLog['doseIU'] == localLog.doseIU,
-        );
-
-        if (!exists) {
-          // Upload to Firestore
-          await _firestoreService.saveInfusionLog(
-            uid: user.uid,
-            medication: localLog.medication,
-            doseIU: localLog.doseIU,
-            date: localLog.date,
-            time: localLog.time,
-            notes: localLog.notes,
-          );
-          print('Synced local log to Firestore: ${localLog.medication}');
-        }
-      }
+      await _offlineService.initialize();
+      print('Offline service initialized successfully');
     } catch (e) {
-      print('Error syncing local data to Firestore: $e');
-      // Don't show error to user as this is background sync
+      print('Error initializing offline service: $e');
     }
   }
 
@@ -130,35 +63,28 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
     try {
       final dateStr = DateFormat('yyyy-MM-dd').format(_selectedDate!);
       final timeStr = _selectedTime!.format(context);
+      final user = _auth.currentUser;
 
-      // Create infusion log data
+      // Create infusion log data using our new model
       final log = InfusionLog(
+        id: DateTime.now().millisecondsSinceEpoch.toString(),
+        uid: user?.uid ?? 'guest',
         medication: _medicationController.text.trim(),
         doseIU: int.tryParse(_doseController.text.trim()) ?? 0,
         date: dateStr,
         time: timeStr,
         notes: _notesController.text.trim(),
+        createdAt: DateTime.now(),
       );
 
-      // Save to local Hive storage
-      final box = Hive.box<InfusionLog>('infusion_logs');
-      await box.add(log);
-
-      // Save to Firestore (cloud database)
-      final user = _auth.currentUser;
-      if (user != null) {
-        await _firestoreService.saveInfusionLog(
-          uid: user.uid,
-          medication: _medicationController.text.trim(),
-          doseIU: int.tryParse(_doseController.text.trim()) ?? 0,
-          date: dateStr,
-          time: timeStr,
-          notes: _notesController.text.trim(),
-        );
-        print('Infusion log saved to Firestore successfully');
-      } else {
-        print('User not authenticated - saved to local storage only');
-      }
+      // Save using our new offline service (handles both local and cloud storage)
+      await _offlineService.saveInfusionLogOffline(
+        medication: log.medication,
+        doseIU: log.doseIU,
+        date: log.date,
+        time: log.time,
+        notes: log.notes,
+      );
 
       if (!mounted) return;
 
@@ -198,9 +124,7 @@ class _LogInfusionScreenState extends State<LogInfusionScreen> {
         ),
       );
     } finally {
-      if (mounted) {
-        setState(() => _isSaving = false);
-      }
+      setState(() => _isSaving = false);
     }
   }
 

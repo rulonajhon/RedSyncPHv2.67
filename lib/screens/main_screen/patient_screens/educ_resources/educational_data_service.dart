@@ -523,6 +523,270 @@ class EducationalDataService {
         },
         // Add more learning materials...
       ],
+      'Official Guidelines & Resources': [
+        {
+          'id': 'wfh-guidelines',
+          'title': 'WFH Treatment Guidelines',
+          'description':
+              'Official treatment guidelines from the World Federation of Hemophilia.',
+          'readTime': 15,
+          'difficulty': 'Advanced',
+          'icon': 'globe',
+          'content': [
+            {
+              'title': 'World Federation of Hemophilia (WFH)',
+              'content':
+                  'The WFH is the global hemophilia organization, representing patients with hemophilia and related bleeding disorders in over 140 countries worldwide.',
+            },
+            {
+              'title': 'WFH Guidelines for Management of Hemophilia',
+              'bulletPoints': [
+                'Comprehensive care approach involving multidisciplinary teams',
+                'Regular prophylaxis with factor concentrates for severe hemophilia',
+                'On-demand treatment for bleeding episodes',
+                'Home treatment programs for appropriate patients',
+                'Regular monitoring and assessment of joint health',
+                'Physical therapy and exercise recommendations',
+                'Psychosocial support and counseling',
+              ],
+            },
+            {
+              'title': 'Key WFH Recommendations',
+              'content':
+                  'The WFH recommends prophylactic treatment starting in early childhood (before age 2-3) to prevent joint bleeding and damage. Regular comprehensive care visits every 6-12 months are essential.',
+              'warning':
+                  'These are general guidelines. Always follow your local healthcare provider\'s specific recommendations.',
+            },
+            {
+              'title': 'WFH Severity Classification',
+              'bulletPoints': [
+                'Severe: <1% factor activity (frequent spontaneous bleeding)',
+                'Moderate: 1-5% factor activity (bleeding after mild trauma)',
+                'Mild: 5-40% factor activity (bleeding after major trauma/surgery)',
+              ],
+            },
+          ],
+          'additionalResources': [
+            {
+              'type': 'pdf',
+              'title':
+                  'WFH Guidelines for Management of Hemophilia (3rd Edition)',
+              'description':
+                  'Comprehensive treatment guidelines from WFH experts',
+            },
+            {
+              'type': 'website',
+              'title': 'WFH Official Website',
+              'description': 'Visit wfh.org for latest updates and resources',
+            },
+          ],
+        },
+        {
+          'id': 'national-organizations',
+          'title': 'National Hemophilia Organizations',
+          'description':
+              'Resources from recognized national hemophilia foundations.',
+          'readTime': 10,
+          'difficulty': 'Beginner',
+          'icon': 'flag',
+          'content': [
+            {
+              'title': 'National Hemophilia Foundation (USA)',
+              'content':
+                  'The NHF is the leading organization in the U.S. dedicated to finding better treatments and cures for bleeding and clotting disorders.',
+              'bulletPoints': [
+                'MASAC (Medical and Scientific Advisory Council) recommendations',
+                'Treatment center directory and accreditation',
+                'Educational materials and webinars',
+                'Research funding and advocacy',
+                'Patient support programs',
+              ],
+            },
+            {
+              'title': 'Hemophilia Federation of America (HFA)',
+              'content':
+                  'Community-based organization providing education, advocacy, and support services.',
+              'bulletPoints': [
+                'Symposium educational programs',
+                'Legislative advocacy initiatives',
+                'Research grant programs',
+                'Community support networks',
+              ],
+            },
+            {
+              'title': 'European Haemophilia Consortium (EHC)',
+              'content':
+                  'The EHC represents 45 national hemophilia organizations across Europe, advocating for optimal treatment and care.',
+              'bulletPoints': [
+                'European treatment guidelines',
+                'Quality of life research',
+                'Access to care initiatives',
+                'Educational conferences and materials',
+              ],
+            },
+            {
+              'title': 'Other Regional Organizations',
+              'bulletPoints': [
+                'Hemophilia Foundation Australia',
+                'Canadian Hemophilia Society',
+                'Latin American Federation of Hemophilia (FLAHN)',
+                'Asian Federation for Hemophilia (AFH)',
+              ],
+            },
+          ],
+        },
+        {
+          'id': 'clinical-guidelines',
+          'title': 'International Clinical Guidelines',
+          'description':
+              'Evidence-based clinical practice guidelines from medical societies.',
+          'readTime': 12,
+          'difficulty': 'Advanced',
+          'icon': 'stethoscope',
+          'content': [
+            {
+              'title':
+                  'International Society on Thrombosis and Haemostasis (ISTH)',
+              'content':
+                  'ISTH provides scientific guidance on bleeding and thrombotic disorders.',
+              'bulletPoints': [
+                'Standardized laboratory testing procedures',
+                'Diagnostic criteria for bleeding disorders',
+                'Treatment outcome measurement standards',
+                'Research methodology guidelines',
+              ],
+            },
+            {
+              'title': 'American Society of Hematology (ASH) Guidelines',
+              'bulletPoints': [
+                'Evidence-based treatment recommendations',
+                'Management of inhibitors',
+                'Perioperative care protocols',
+                'Prophylaxis versus on-demand treatment',
+              ],
+            },
+            {
+              'title': 'Nordic Hemophilia Council Guidelines',
+              'content':
+                  'Comprehensive Nordic guidelines for hemophilia care, widely adopted in Scandinavian countries.',
+              'bulletPoints': [
+                'Prophylaxis protocols by age group',
+                'Physical activity recommendations',
+                'Long-term joint health monitoring',
+                'Home treatment programs',
+              ],
+            },
+          ],
+        },
+        {
+          'id': 'research-publications',
+          'title': 'Key Research Publications',
+          'description':
+              'Important scientific studies and publications in hemophilia research.',
+          'readTime': 8,
+          'difficulty': 'Advanced',
+          'icon': 'microscope',
+          'content': [
+            {
+              'title': 'Landmark Studies in Hemophilia',
+              'bulletPoints': [
+                'Joint Outcome Study (JOS): Long-term outcomes of prophylaxis vs on-demand',
+                'ESPRIT Study: Extended half-life factors efficacy',
+                'HAVEN Studies: Emicizumab (Hemlibra) clinical trials',
+                'Gene therapy trials: AAV-based gene transfer studies',
+              ],
+            },
+            {
+              'title': 'Key Journals for Hemophilia Research',
+              'bulletPoints': [
+                'Haemophilia (Wiley) - Official journal of WFH',
+                'Blood (American Society of Hematology)',
+                'Journal of Thrombosis and Haemostasis',
+                'Thrombosis Research',
+                'Blood Coagulation & Fibrinolysis',
+              ],
+            },
+            {
+              'title': 'Recent Breakthrough Research',
+              'content':
+                  'Recent advances include gene therapy achieving sustained factor levels, novel non-factor therapies, and improved prophylaxis protocols.',
+            },
+          ],
+        },
+        {
+          'id': 'quality-life-measures',
+          'title': 'Quality of Life Assessment Tools',
+          'description':
+              'Standardized tools used by healthcare providers to assess patient outcomes.',
+          'readTime': 7,
+          'difficulty': 'Intermediate',
+          'icon': 'chartLine',
+          'content': [
+            {
+              'title': 'WFH-Validated Assessment Tools',
+              'bulletPoints': [
+                'Hemophilia Joint Health Score (HJHS) - Version 2.1',
+                'Gilbert Score - Joint assessment for adults',
+                'Hemophilia Activities List (HAL) - Functional assessment',
+                'Canadian Hemophilia Outcome - Kids Life Assessment Tool (CHO-KLAT)',
+              ],
+            },
+            {
+              'title': 'Quality of Life Questionnaires',
+              'bulletPoints': [
+                'Haemo-QoL (Hemophilia Quality of Life questionnaire)',
+                'EQ-5D (European Quality of Life instrument)',
+                'SF-36 (Short Form Health Survey)',
+                'VERITAS-Pro/VERITAS-PRN (Treatment adherence scales)',
+              ],
+            },
+            {
+              'title': 'Patient-Reported Outcomes',
+              'content':
+                  'These tools help healthcare providers understand the real-world impact of hemophilia and treatment effectiveness from the patient\'s perspective.',
+            },
+          ],
+        },
+        {
+          'id': 'international-standards',
+          'title': 'International Treatment Standards',
+          'description':
+              'Global standards for hemophilia care and treatment quality.',
+          'readTime': 9,
+          'difficulty': 'Advanced',
+          'icon': 'award',
+          'content': [
+            {
+              'title': 'WFH Global Standards',
+              'bulletPoints': [
+                'Comprehensive care model with multidisciplinary teams',
+                'Access to safe clotting factor concentrates',
+                'Regular monitoring and assessment protocols',
+                'Patient and family education programs',
+                'Psychosocial support services',
+                'Emergency care protocols',
+              ],
+            },
+            {
+              'title': 'Treatment Center Accreditation',
+              'content':
+                  'Many countries have accreditation programs for hemophilia treatment centers to ensure quality of care standards.',
+              'bulletPoints': [
+                'Minimum staffing requirements (hematologist, nurse, social worker)',
+                'Comprehensive care service requirements',
+                'Data collection and outcome tracking',
+                'Patient education and support services',
+                'Research and clinical trial participation',
+              ],
+            },
+            {
+              'title': 'International Collaboration',
+              'content':
+                  'Global initiatives include the WFH Humanitarian Aid Program, providing factor concentrates and training to developing countries.',
+            },
+          ],
+        },
+      ],
     };
   }
 
@@ -570,6 +834,12 @@ class EducationalDataService {
         'color': 'yellow',
         'subtitle': '10 Topics',
       },
+      {
+        'title': 'Official Guidelines & Resources',
+        'icon': 'certificateMedical',
+        'color': 'teal',
+        'subtitle': '6 Topics',
+      },
     ];
   }
 
@@ -590,6 +860,8 @@ class EducationalDataService {
       case 'yellow':
         return Colors
             .amber; // Using amber instead of yellow for better visibility
+      case 'teal':
+        return Colors.teal;
       default:
         return Colors.blue;
     }

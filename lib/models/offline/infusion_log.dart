@@ -1,49 +1,45 @@
 import 'package:hive/hive.dart';
 
-part 'log_bleed.g.dart';
+part 'infusion_log.g.dart';
 
-@HiveType(typeId: 2)
-class BleedLog extends HiveObject {
+@HiveType(typeId: 1)
+class InfusionLog extends HiveObject {
   @HiveField(0)
   String id;
 
   @HiveField(1)
-  String date;
+  String medication;
 
   @HiveField(2)
-  String time;
+  int doseIU;
 
   @HiveField(3)
-  String bodyRegion;
+  String date;
 
   @HiveField(4)
-  String severity;
+  String time;
 
   @HiveField(5)
-  String specificRegion;
-
-  @HiveField(6)
   String notes;
 
-  @HiveField(7)
+  @HiveField(6)
   String uid;
 
-  @HiveField(8)
+  @HiveField(7)
   DateTime createdAt;
 
-  @HiveField(9)
+  @HiveField(8)
   DateTime? syncedAt;
 
-  @HiveField(10)
+  @HiveField(9)
   bool needsSync;
 
-  BleedLog({
+  InfusionLog({
     required this.id,
+    required this.medication,
+    required this.doseIU,
     required this.date,
     required this.time,
-    required this.bodyRegion,
-    required this.severity,
-    required this.specificRegion,
     required this.notes,
     required this.uid,
     required this.createdAt,
@@ -53,11 +49,10 @@ class BleedLog extends HiveObject {
 
   Map<String, dynamic> toMap() {
     return {
+      'medication': medication,
+      'doseIU': doseIU,
       'date': date,
       'time': time,
-      'bodyRegion': bodyRegion,
-      'severity': severity,
-      'specificRegion': specificRegion,
       'notes': notes,
       'uid': uid,
       'createdAt': createdAt.toIso8601String(),

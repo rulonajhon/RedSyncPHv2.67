@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../../services/community_service.dart';
 import 'post_detail_screen.dart';
 import 'create_post_sheet.dart';
@@ -21,6 +22,7 @@ class CommunityFeedTab extends StatefulWidget {
 class _CommunityFeedTabState extends State<CommunityFeedTab> {
   // Stream for real-time posts
   Stream<List<Map<String, dynamic>>>? _postsStream;
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
@@ -28,11 +30,177 @@ class _CommunityFeedTabState extends State<CommunityFeedTab> {
     _postsStream = widget.communityService.getPostsStream();
   }
 
+  // Check if current user is a guest
+  Future<bool> _isGuestUser() async {
+    try {
+      final isGuest = await _secureStorage.read(key: 'isGuest');
+      return isGuest == 'true';
+    } catch (e) {
+      print('Error checking guest status: $e');
+      return false;
+    }
+  }
+
+  // Show dialog to prompt guest users to create an account
+  void _showGuestPromptDialog(String action) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.account_circle,
+                  color: Colors.blue,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Account Required',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.6,
+            ),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'To $action, you need to create an account or sign in.',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      color: Colors.black87,
+                      height: 1.3,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue.shade100),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.check_circle,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            const Flexible(
+                              child: Text(
+                                'Benefits of having an account:',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.blue,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text('• Post and share in the community',
+                            style:
+                                TextStyle(fontSize: 13, color: Colors.black87)),
+                        const SizedBox(height: 3),
+                        const Text('• Save your health data and progress',
+                            style:
+                                TextStyle(fontSize: 13, color: Colors.black87)),
+                        const SizedBox(height: 3),
+                        const Text('• Access personalized AI assistance',
+                            style:
+                                TextStyle(fontSize: 13, color: Colors.black87)),
+                        const SizedBox(height: 3),
+                        const Text('• Get medication reminders',
+                            style:
+                                TextStyle(fontSize: 13, color: Colors.black87)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey.shade600,
+              ),
+              child: const Text(
+                'Maybe Later',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to authentication screen
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Create Account',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          // Check if user is a guest
+          final isGuest = await _isGuestUser();
+          if (isGuest) {
+            _showGuestPromptDialog('post in the community');
+            return;
+          }
+
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hemophilia_manager/models/online/chat_message.dart';
 import 'package:hemophilia_manager/services/openai_service.dart';
 
@@ -17,6 +18,7 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+  final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
   bool _isLoading = false;
 
   @override
@@ -26,6 +28,180 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       _addWelcomeMessage();
       _hasInitialized = true;
     }
+  }
+
+  // Check if current user is a guest
+  Future<bool> _isGuestUser() async {
+    try {
+      final isGuest = await _secureStorage.read(key: 'isGuest');
+      return isGuest == 'true';
+    } catch (e) {
+      print('Error checking guest status: $e');
+      return false;
+    }
+  }
+
+  // Show dialog to prompt guest users to create an account
+  void _showGuestPromptDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.smart_toy,
+                  color: Colors.redAccent,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'AI Assistant Access',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'To access our AI hemophilia assistant, you need to create an account or sign in.',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.purple.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.purple.shade100),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.psychology,
+                          color: Colors.redAccent,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'AI Assistant Features:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.redAccent,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    const Text('• Personalized hemophilia guidance',
+                        style: TextStyle(fontSize: 14, color: Colors.black87)),
+                    const SizedBox(height: 4),
+                    const Text('• Treatment and medication advice',
+                        style: TextStyle(fontSize: 14, color: Colors.black87)),
+                    const SizedBox(height: 4),
+                    const Text('• Emergency care information',
+                        style: TextStyle(fontSize: 14, color: Colors.black87)),
+                    const SizedBox(height: 4),
+                    const Text('• Context-aware conversations',
+                        style: TextStyle(fontSize: 14, color: Colors.black87)),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.security,
+                      color: Colors.amber.shade700,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Text(
+                        'Your conversations are private and secure',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.black87,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey.shade600,
+              ),
+              child: const Text(
+                'Maybe Later',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                // Navigate to authentication screen
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/',
+                  (route) => false,
+                );
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: const Text(
+                'Create Account',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _addWelcomeMessage() {
@@ -47,6 +223,13 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
 
   void _sendMessage() async {
     if (_textController.text.trim().isEmpty) return;
+
+    // Check if user is a guest
+    final isGuest = await _isGuestUser();
+    if (isGuest) {
+      _showGuestPromptDialog();
+      return;
+    }
 
     final userMessage = _textController.text.trim();
     _textController.clear();
@@ -188,34 +371,69 @@ class _ChatbotScreenState extends State<ChatbotScreen> {
       }
 
       // If recent conversation was about hemophilia, allow follow-up questions
-      // BUT ONLY if they contain medical/treatment terms
       if (hasRecentHemophiliaContext) {
-        // Only allow follow-ups that mention medical/treatment terms
-        final medicalTreatmentTerms = [
-          'water', 'salt', 'ice', 'heat', 'warm', 'cold', 'compress',
-          'bandage', 'pressure', 'rest', 'elevation', 'medication',
-          'treatment', 'remedy', 'home remedy', 'care', 'help',
-          'apply', 'use for', 'take for', 'medicine', 'therapy',
-          'bleeding', 'blood', 'pain', 'swelling', 'bruise',
-          'doctor', 'hospital', 'emergency', 'first aid',
-          'dose', 'dosage', 'infusion', 'injection', 'factor',
+        // Allow common follow-up question patterns
+        final followUpPatterns = [
+          'how many',
+          'how much',
+          'what about',
+          'tell me more',
+          'more about',
+          'and what',
+          'what else',
+          'can you',
+          'could you',
+          'would you',
+          'explain',
+          'describe',
+          'elaborate',
+          'details',
+          'information',
+          'statistics',
+          'numbers',
+          'percentage',
+          'percent',
+          'rate',
+          'common',
+          'rare',
+          'often',
+          'frequent',
+          'affects',
+          'affect',
+          'people',
+          'patients',
+          'cases',
+          'population',
+          'worldwide',
+          'globally',
+          'why',
+          'when',
+          'where',
+          'who',
+          'causes',
+          'caused',
+          'symptoms',
+          'signs',
+          'treatment',
+          'treatments',
+          'help',
+          'care',
+          'manage',
+          'prevent',
+          'it',
+          'this',
+          'that',
+          'they',
         ];
 
-        // Check if the query contains medical/treatment context
-        bool containsMedicalTerms = medicalTreatmentTerms.any(
-          (term) => lowerQuery.contains(term)
-        );
+        // Check if query contains follow-up patterns
+        if (followUpPatterns.any((pattern) => lowerQuery.contains(pattern))) {
+          return true;
+        }
 
-        // Only allow if it's a medical follow-up question
-        if (containsMedicalTerms) {
-          final followUpPatterns = [
-            'can i', 'should i', 'is it safe', 'can i use', 'should i use',
-            'is it okay', 'what about', 'how about', 'what if',
-          ];
-          
-          if (followUpPatterns.any((pattern) => lowerQuery.contains(pattern))) {
-            return true;
-          }
+        // Also allow short questions (likely follow-ups) if in hemophilia context
+        if (lowerQuery.length <= 50 && lowerQuery.contains('?')) {
+          return true;
         }
       }
     }

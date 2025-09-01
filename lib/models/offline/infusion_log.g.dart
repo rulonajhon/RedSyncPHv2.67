@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of '../../screens/main_screen/patient_screens/log_infusion.dart';
+part of 'infusion_log.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
@@ -17,28 +17,43 @@ class InfusionLogAdapter extends TypeAdapter<InfusionLog> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return InfusionLog(
-      medication: fields[0] as String,
-      doseIU: fields[1] as int,
-      date: fields[2] as String,
-      time: fields[3] as String,
-      notes: fields[4] as String,
+      id: fields[0] as String,
+      medication: fields[1] as String,
+      doseIU: fields[2] as int,
+      date: fields[3] as String,
+      time: fields[4] as String,
+      notes: fields[5] as String,
+      uid: fields[6] as String,
+      createdAt: fields[7] as DateTime,
+      syncedAt: fields[8] as DateTime?,
+      needsSync: fields[9] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, InfusionLog obj) {
     writer
-      ..writeByte(5)
+      ..writeByte(10)
       ..writeByte(0)
-      ..write(obj.medication)
+      ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.doseIU)
+      ..write(obj.medication)
       ..writeByte(2)
-      ..write(obj.date)
+      ..write(obj.doseIU)
       ..writeByte(3)
-      ..write(obj.time)
+      ..write(obj.date)
       ..writeByte(4)
-      ..write(obj.notes);
+      ..write(obj.time)
+      ..writeByte(5)
+      ..write(obj.notes)
+      ..writeByte(6)
+      ..write(obj.uid)
+      ..writeByte(7)
+      ..write(obj.createdAt)
+      ..writeByte(8)
+      ..write(obj.syncedAt)
+      ..writeByte(9)
+      ..write(obj.needsSync);
   }
 
   @override
